@@ -1,5 +1,6 @@
 # Add sources and include files from current directory to project library
 target_include_directories(${LIBRARY_NAME} PUBLIC ${CURRENT_DIRECTORY})
-
-add_subdirectory(helpers)
-add_subdirectory(huffman)
+target_sources(${LIBRARY_NAME} PUBLIC
+    x_Huffman_Node.cpp
+    Huffman_Compressor.cpp
+)

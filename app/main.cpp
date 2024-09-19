@@ -1,7 +1,13 @@
-#include "y_core.h"
+#include "huffman/Huffman_Compressor.h"
 
-
-int main(int argc, char** args)
+int main()
 {
-    CUSTOM_TEST_RUN(argc, args);
+    // std::string folderPath = "H:\\Programare\\C++\\CompressionTool\\input";
+    // std::string compressedFileName = "H:\\Programare\\C++\\CompressionTool\\compressed.bin";
+    // std::string outputFolderPath = "H:\\Programare\\C++\\CompressionTool\\output";
+
+    // huffmanCompressFolder(folderPath, compressedFileName);
+    // huffmanDecompressFolder(compressedFileName, outputFolderPath);
+
+    return 0;
 }
