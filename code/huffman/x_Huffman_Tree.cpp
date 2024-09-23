@@ -1,5 +1,4 @@
-#include "x_Huffman_Node.h"
-
+#include "x_Huffman_Tree.h"
 
 
 _Huffman_Node::_Huffman_Node(symbol_t byte, size_t frequency)

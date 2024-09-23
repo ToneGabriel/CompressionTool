@@ -11,7 +11,7 @@
 #include <stdexcept>
 
 #include "Thread_Pool.h"
-#include "x_Huffman_Node.h"
+#include "x_Huffman_Tree.h"
 
 void generateCodes(_Huffman_Node* root, const std::string& code, std::unordered_map<unsigned char, std::string>& huffmanCode);
 void freeTree(_Huffman_Node* root);
