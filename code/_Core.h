@@ -8,12 +8,12 @@
 #include "Config.hpp"   // project configuration
 
 
-inline void __Assert(bool expr, const char* msg, const char* exprstr, const char* file, int line)
+inline void __Assert(bool expr, const char* msg, const char* expected, const char* file, int line)
 {
     if (!expr)
     {
         std::cerr   << "Assert failed:\t"   << msg      << "\n"
-                    << "Expected:\t"        << exprstr  << "\n"
+                    << "Expected:\t"        << expected  << "\n"
                     << "File:\t\t"          << file     << "\n"
                     << "Line:\t\t"          << line     << "\n";
         ::abort();
@@ -26,4 +26,5 @@ inline void __Assert(bool expr, const char* msg, const char* exprstr, const char
 
 #define _ASSERT(Expr, Msg) __Assert(Expr, Msg, #Expr, __FILE__, __LINE__)
 
-using symbol_t = char;
+#define DETAIL_BEGIN namespace detail {
+#define DETAIL_END }
