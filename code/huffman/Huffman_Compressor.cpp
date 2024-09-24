@@ -1,237 +1,180 @@
 #include "Huffman_Compressor.h"
 
-// namespace fs = std::filesystem;
 
-// void generateCodes(_Huffman_Node* root, const std::string& code, std::unordered_map<unsigned char, std::string>& huffmanCode) {
-//     if (!root) return;
-
-//     if (!root->_Left && !root->_Right) {
-//         huffmanCode[root->_Symbol] = code;
-//     }
-
-//     generateCodes(root->_Left, code + "0", huffmanCode);
-//     generateCodes(root->_Right, code + "1", huffmanCode);
-// }
-
-// void freeTree(_Huffman_Node* root) {
-//     if (!root) return;
-//     freeTree(root->_Left);
-//     freeTree(root->_Right);
-//     delete root;
-// }
-
-// void writeEncodedToFile(const std::string& encodedStr, std::ofstream& outFile) {
-//     for (size_t i = 0; i < encodedStr.size(); i += 8) {
-//         std::string byte = encodedStr.substr(i, 8);
-//         std::bitset<8> bits(byte);
-//         outFile.put(static_cast<unsigned char>(bits.to_ulong()));
-//     }
-// }
-
-// std::string readEncodedFromFile(std::ifstream& inFile) {
-//     std::string encodedStr = "";
-//     char byte;
-
-//     while (inFile.get(byte)) {
-//         std::bitset<8> bits(byte);
-//         encodedStr += bits.to_string();
-//     }
-
-//     return encodedStr;
-// }
-
-// void writeTreeToFile(_Huffman_Node* root, std::ofstream& outFile) {
-//     if (!root) {
-//         outFile.put(0); // Null marker for empty node
-//         return;
-//     }
-//     outFile.put(1); // Marker for internal node
-//     outFile.put(root->_Symbol);
-//     writeTreeToFile(root->_Left, outFile);
-//     writeTreeToFile(root->_Right, outFile);
-// }
-
-// _Huffman_Node* readTreeFromFile(std::ifstream& inFile) {
-//     char marker;
-//     inFile.get(marker);
-//     if (marker == 0) {
-//         return nullptr;
-//     }
-//     char byte;
-//     inFile.get(reinterpret_cast<char&>(byte));
-//     _Huffman_Node* node = new _Huffman_Node(byte, 0);
-//     node->_Left = readTreeFromFile(inFile);
-//     node->_Right = readTreeFromFile(inFile);
-//     return node;
-// }
-
-// void huffmanCompressFolder(const std::string& folderPath, const std::string& compressedFileName) {
-//     std::vector<unsigned char> allFileData;
-//     std::vector<std::pair<std::string, size_t>> fileMetadata;
-
-//     for (const auto& entry : fs::directory_iterator(folderPath)) {
-//         if (entry.is_regular_file()) {
-//             std::ifstream file(entry.path(), std::ios::binary);
-//             if (!file.is_open()) {
-//                 std::cout << "Error opening file: " << entry.path() << std::endl;
-//                 continue;
-//             }
-
-//             std::vector<unsigned char> fileData((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-//             allFileData.insert(allFileData.end(), fileData.begin(), fileData.end());
-
-//             fileMetadata.push_back({ entry.path().filename().string(), fileData.size() });
-//         }
-//     }
-
-//     std::unordered_map<unsigned char, int> freqMap;
-//     for (unsigned char byte : allFileData) {
-//         freqMap[byte]++;
-//     }
-
-//     std::priority_queue<_Huffman_Node*> pq;
-
-//     for (auto pair : freqMap) {
-//         pq.push(new _Huffman_Node(pair.first, pair.second));
-//     }
-
-//     while (pq.size() != 1) {
-//         _Huffman_Node* _Left = pq.top(); pq.pop();
-//         _Huffman_Node* _Right = pq.top(); pq.pop();
-
-//         _Huffman_Node* newNode = new _Huffman_Node(_Left->_Frequency + _Right->_Frequency, _Left, _Right);
-//         pq.push(newNode);
-//     }
-
-//     _Huffman_Node* root = pq.top();
-
-//     std::unordered_map<unsigned char, std::string> huffmanCode;
-//     generateCodes(root, "", huffmanCode);
-
-//     std::string encodedStr = "";
-//     for (unsigned char byte : allFileData) {
-//         encodedStr += huffmanCode[byte];
-//     }
-
-//     std::ofstream compressedFile(compressedFileName, std::ios::binary);
-//     if (!compressedFile.is_open()) {
-//         std::cout << "Error: Unable to create compressed file " << compressedFileName << std::endl;
-//         return;
-//     }
-
-//     for (const auto& [filename, size] : fileMetadata) {
-//         compressedFile << filename << '\0';
-//         compressedFile.write(reinterpret_cast<const char*>(&size), sizeof(size));
-//     }
-
-//     writeTreeToFile(root, compressedFile);
-//     writeEncodedToFile(encodedStr, compressedFile);
-
-//     compressedFile.close();
-//     freeTree(root);
-
-//     std::cout << "Folder compression complete." << std::endl;
-// }
-
-// void huffmanDecompressFolder(const std::string& compressedFileName, const std::string& outputFolderPath) {
-//     std::ifstream compressedFile(compressedFileName, std::ios::binary);
-//     if (!compressedFile.is_open()) {
-//         std::cout << "Error: Unable to open compressed file " << compressedFileName << std::endl;
-//         return;
-//     }
-
-//     std::vector<std::pair<std::string, size_t>> fileMetadata;
-//     while (true) {
-//         std::string filename;
-//         std::getline(compressedFile, filename, '\0');
-//         if (filename.empty()) break;
-
-//         size_t fileSize;
-//         compressedFile.read(reinterpret_cast<char*>(&fileSize), sizeof(fileSize));
-
-//         fileMetadata.push_back({ filename, fileSize });
-//     }
-
-//     _Huffman_Node* root = readTreeFromFile(compressedFile);
-//     std::string encodedStr = readEncodedFromFile(compressedFile);
-//     compressedFile.close();
-
-//     std::string decodedStr = "";
-//     _Huffman_Node* current = root;
-//     for (char bit : encodedStr) {
-//         current = bit == '0' ? current->_Left : current->_Right;
-//         if (!current->_Left && !current->_Right) {
-//             decodedStr += current->_Symbol;
-//             current = root;
-//         }
-//     }
-
-//     size_t index = 0;
-//     for (const auto& [filename, size] : fileMetadata) {
-//         std::ofstream outFile(outputFolderPath + "/" + filename, std::ios::binary);
-//         if (!outFile.is_open()) {
-//             std::cout << "Error: Unable to create output file " << outputFolderPath + "/" + filename << std::endl;
-//             return;
-//         }
-//         outFile.write(decodedStr.data() + index, size);
-//         index += size;
-//     }
-
-//     std::cout << "Decompression complete, files restored to " << outputFolderPath << std::endl;
-// }
-
-
-
-
-Huffman_Compressor::Huffman_Compressor()
+// HELP: Declarations
+// ==================================================================================================================================================
+// ==================================================================================================================================================
+struct _Huffman_Node
 {
-    // TODO
+    symbol_t        _Symbol;
+    size_t          _Frequency;
+    _Huffman_Node*  _Left;
+    _Huffman_Node*  _Right;
+
+    _Huffman_Node() = delete;
+    ~_Huffman_Node() = default;
+
+    _Huffman_Node(symbol_t symbol, size_t frequency, _Huffman_Node* left = nullptr, _Huffman_Node* right = nullptr);
+
+    _Huffman_Node(const _Huffman_Node& other) = delete;
+    _Huffman_Node& operator=(const _Huffman_Node& other) = delete;
+};  // END _Huffman_Node
+
+
+struct _Huffman_NodePtr_Greater_Compare
+{
+    bool operator()(const _Huffman_Node* const left, const _Huffman_Node* const right);
+};  // END _Huffman_NodePtr_Greater_Compare
+
+
+_Huffman_Node* _build_huffman_tree(const std::unordered_map<symbol_t, size_t>& frequencies);
+void _delete_subtree(_Huffman_Node* subroot);
+void _print_subtree(const size_t ident, const _Huffman_Node* const subroot, const std::string& rlFlag);
+void _generate_huffman_codes_rec(const _Huffman_Node* const subroot, const std::string& code, std::unordered_map<symbol_t, std::string>& codes);
+std::unordered_map<symbol_t, std::string> _generate_huffman_codes(const std::unordered_map<symbol_t, size_t>& frequencies);
+
+
+
+// MAIN: Definitions
+// ==================================================================================================================================================
+// ==================================================================================================================================================
+
+HUFFMAN_BEGIN
+
+void compress(const std::string& filename)
+{
+    files::create_empty_file_from(filename, BIN_EXTENSION);
+
+    auto frequencies = files::get_symbol_frequencies(filename);
+
+    auto codes = _generate_huffman_codes(frequencies);
 }
 
-Huffman_Compressor::~Huffman_Compressor()
+void decompress(const std::string& filename)
 {
 
 }
 
-void Huffman_Compressor::compress(const std::string& dir)
+HUFFMAN_END
+
+
+
+// HELP: Definitions
+// ==================================================================================================================================================
+// ==================================================================================================================================================
+_Huffman_Node::_Huffman_Node(symbol_t symbol, size_t frequency, _Huffman_Node* left, _Huffman_Node* right)
+    :   _Symbol(symbol),
+        _Frequency(frequency),
+        _Left(left),
+        _Right(right)
 {
-    // TODO
+    /*Empty*/
 }
 
-void Huffman_Compressor::decompress(const std::string& dir)
+
+bool _Huffman_NodePtr_Greater_Compare::operator()(const _Huffman_Node* const left, const _Huffman_Node* const right)
 {
-    // TODO
+    return left->_Frequency > right->_Frequency;
 }
 
-void Huffman_Compressor::_frequency(const std::string& filename) const
-{
-    std::ifstream file(filename, std::ios::binary);
 
-    if (!file)
+_Huffman_Node* _build_huffman_tree(const std::unordered_map<symbol_t, size_t>& frequencies)
+{
+    _ASSERT(!frequencies.empty(), "No frequency data!");
+
+    _Huffman_Node* root = nullptr;
+
+    // Create leaf nodes for each symbol and push them to the priority queue
+    std::priority_queue<_Huffman_Node*,
+                        std::vector<_Huffman_Node*>,
+                        _Huffman_NodePtr_Greater_Compare> prioq;
+
+    for (const auto& [symbol, frequency] : frequencies)
+        prioq.push(new _Huffman_Node(symbol, frequency));
+
+    while (prioq.size() > 1)    // Last elem will be root
     {
-        std::cerr << "Error opening file: " << filename << std::endl;
+        // Remove two nodes of lowest frequency
+        _Huffman_Node* leftNode = prioq.top();
+        prioq.pop();
+
+        _Huffman_Node* rightNode = prioq.top();
+        prioq.pop();
+        
+        // Create a new internal subroot with these two nodes as children
+        prioq.push(new _Huffman_Node(   static_cast<symbol_t>(0),
+                                        leftNode->_Frequency + rightNode->_Frequency,
+                                        leftNode,
+                                        rightNode));
+    }
+
+    // Last elem is root
+    root = prioq.top();
+    prioq.pop();
+
+    return root;
+}
+
+void _delete_subtree(_Huffman_Node* subroot)
+{
+    if (subroot == nullptr)
+        return;
+
+    _delete_subtree(subroot->_Left);
+    _delete_subtree(subroot->_Right);
+
+    delete subroot;
+}
+
+void _print_subtree(const size_t ident,
+                    const _Huffman_Node* const subroot,
+                    const std::string& rlFlag)
+{
+    std::string str;
+    str.append(ident, '\t');
+
+    if (subroot != nullptr)
+        std::cout << str << subroot->_Frequency << " [" << subroot->_Symbol << " " << rlFlag << "]\n";
+
+    if (subroot->_Left != nullptr)
+        _print_subtree(ident + 1, subroot->_Left, "LEFT");
+
+    if (subroot->_Right != nullptr)
+        _print_subtree(ident + 1, subroot->_Right, "RIGHT");
+}
+
+void _generate_huffman_codes_rec(   const _Huffman_Node* const subroot,
+                                    const std::string& code,
+                                    std::unordered_map<symbol_t, std::string>& codes)
+{
+    if (subroot == nullptr)
+        return;
+
+    // If it's a leaf node, store the code
+    if (subroot->_Left == nullptr && subroot->_Right == nullptr)
+    {
+        codes[subroot->_Symbol] = code;
         return;
     }
 
-    static constexpr std::streamsize chunkSize = 64 * 1024;  // 64 KB chunk size
+    // Traverse left subtree, append '0'
+    _generate_huffman_codes_rec(subroot->_Left, code + "0", codes);
 
-    std::vector<char> buffer(chunkSize);
-    std::unordered_map<char, size_t> frequencyMap;
+    // Traverse right subtree, append '1'
+    _generate_huffman_codes_rec(subroot->_Right, code + "1", codes);
+}
 
-    while (file.read(buffer.data(), chunkSize) || file.gcount() > 0)
-    {
-        std::streamsize bytesRead = file.gcount();
-        for (std::streamsize i = 0; i < bytesRead; ++i)
-        {
-            if (!frequencyMap.contains(buffer[i]))
-                frequencyMap[buffer[i]] = 0;
+std::unordered_map<symbol_t, std::string> _generate_huffman_codes(const std::unordered_map<symbol_t, size_t>& frequencies)
+{
+    std::unordered_map<symbol_t, std::string> ret;
 
-            ++frequencyMap[buffer[i]];
-        }
-    }
+    _Huffman_Node* root = _build_huffman_tree(frequencies);
 
-    // Print the frequency of each byte
-    std::cout << "Byte frequencies in the file:" << std::endl;
-    for (const auto& pair : frequencyMap)
-        std::cout << "Byte: " << static_cast<int>(pair.first) << " | Frequency: " << pair.second << std::endl;
+    // _print_subtree(0, root, "ROOT");
+
+    _generate_huffman_codes_rec(root, "", ret);
+
+    _delete_subtree(root);
+
+    return ret;
 }

@@ -28,3 +28,8 @@ inline void __Assert(bool expr, const char* msg, const char* expected, const cha
 
 #define DETAIL_BEGIN namespace detail {
 #define DETAIL_END }
+
+#define BUFFER_SIZE 65536   // 64 * 1024 (64 KB)
+#define BIN_EXTENSION ".bin"
+
+using symbol_t = char;
