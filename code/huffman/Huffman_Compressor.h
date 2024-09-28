@@ -1,9 +1,10 @@
 #pragma once
 
 #include <string>
-#include <vector>
+#include <bitset>
 #include <unordered_map>
 #include <queue>
+
 #include <iostream>
 #include <fstream>
 #include <filesystem>
@@ -17,8 +18,6 @@
 
 
 HUFFMAN_BEGIN
-
-namespace fs = std::filesystem;
 
 void compress(const std::string& filename);
 void decompress(const std::string& filename);

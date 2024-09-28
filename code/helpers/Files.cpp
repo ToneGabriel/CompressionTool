@@ -1,6 +1,8 @@
 #include "Files.h"
 
 
+namespace fs = std::filesystem;
+
 FILES_BEGIN
 
 std::string create_empty_file_from(const std::string& original, const std::string& newExtension)
@@ -16,31 +18,18 @@ std::string create_empty_file_from(const std::string& original, const std::strin
     return newPath.string();
 }
 
-std::unordered_map<symbol_t, size_t> get_symbol_frequencies(const std::string& filename)
+void read_file_and_process_buffer(const std::string& filename, std::function<void(char*, std::streamsize)> processFunc)
 {
+    _ASSERT(fs::exists(filename), "File not found!");
+
     std::ifstream file(filename, std::ios::binary);
 
-    _ASSERT(file.is_open(), "Error opening file!");
+    symbol_t buffer[BUFFER_SIZE];
 
-    std::vector<symbol_t>                   buffer(BUFFER_SIZE);
-    std::streamsize                         bytesRead;
-    std::unordered_map<symbol_t, size_t>    frequencyMap;
-
-    while (file.read(buffer.data(), BUFFER_SIZE) || file.gcount() > 0)
-    {
-        bytesRead = file.gcount();
-        for (std::streamsize i = 0; i < bytesRead; ++i)
-        {
-            if (!frequencyMap.contains(buffer[i]))
-                frequencyMap[buffer[i]] = 0;
-
-            ++frequencyMap[buffer[i]];
-        }
-    }
+    while (file.read(buffer, BUFFER_SIZE) || file.gcount() > 0)
+        processFunc(buffer, file.gcount());
 
     file.close();
-
-    return frequencyMap;
 }
 
 FILES_END

@@ -12,10 +12,7 @@
 
 FILES_BEGIN
 
-namespace fs = std::filesystem;
-
 std::string create_empty_file_from(const std::string& original, const std::string& newExtension);
-std::unordered_map<symbol_t, size_t> get_symbol_frequencies(const std::string& filename);
-
+void read_file_and_process_buffer(const std::string& filename, std::function<void(char*, std::streamsize)> processFunc);
 
 FILES_END

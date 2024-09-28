@@ -1,9 +1,11 @@
 #include "Huffman_Compressor.h"
 
+namespace fs = std::filesystem;
 
 // HELP: Declarations
 // ==================================================================================================================================================
 // ==================================================================================================================================================
+
 struct _Huffman_Node
 {
     symbol_t        _Symbol;
@@ -27,12 +29,14 @@ struct _Huffman_NodePtr_Greater_Compare
 };  // END _Huffman_NodePtr_Greater_Compare
 
 
-_Huffman_Node* _build_huffman_tree(const std::unordered_map<symbol_t, size_t>& frequencies);
-void _delete_subtree(_Huffman_Node* subroot);
-void _print_subtree(const size_t ident, const _Huffman_Node* const subroot, const std::string& rlFlag);
+std::pair<_Huffman_Node*, size_t> _build_huffman_tree(const std::unordered_map<symbol_t, size_t>& frequencies);
+void _delete_tree(_Huffman_Node* subroot);
+void _print_tree(const size_t ident, const _Huffman_Node* const subroot, const std::string& property);
+
+
+std::unordered_map<symbol_t, size_t> _get_symbol_frequencies(const std::string& filename);
 void _generate_huffman_codes_rec(const _Huffman_Node* const subroot, const std::string& code, std::unordered_map<symbol_t, std::string>& codes);
 std::unordered_map<symbol_t, std::string> _generate_huffman_codes(const std::unordered_map<symbol_t, size_t>& frequencies);
-
 
 
 // MAIN: Definitions
@@ -45,9 +49,9 @@ void compress(const std::string& filename)
 {
     files::create_empty_file_from(filename, BIN_EXTENSION);
 
-    auto frequencies = files::get_symbol_frequencies(filename);
+    auto frequencyMap = _get_symbol_frequencies(filename);
 
-    auto codes = _generate_huffman_codes(frequencies);
+    auto codeMap = _generate_huffman_codes(frequencyMap);
 }
 
 void decompress(const std::string& filename)
@@ -62,6 +66,7 @@ HUFFMAN_END
 // HELP: Definitions
 // ==================================================================================================================================================
 // ==================================================================================================================================================
+
 _Huffman_Node::_Huffman_Node(symbol_t symbol, size_t frequency, _Huffman_Node* left, _Huffman_Node* right)
     :   _Symbol(symbol),
         _Frequency(frequency),
@@ -78,11 +83,12 @@ bool _Huffman_NodePtr_Greater_Compare::operator()(const _Huffman_Node* const lef
 }
 
 
-_Huffman_Node* _build_huffman_tree(const std::unordered_map<symbol_t, size_t>& frequencies)
+std::pair<_Huffman_Node*, size_t> _build_huffman_tree(const std::unordered_map<symbol_t, size_t>& frequencies)
 {
     _ASSERT(!frequencies.empty(), "No frequency data!");
 
     _Huffman_Node* root = nullptr;
+    size_t height       = 0;
 
     // Create leaf nodes for each symbol and push them to the priority queue
     std::priority_queue<_Huffman_Node*,
@@ -106,41 +112,58 @@ _Huffman_Node* _build_huffman_tree(const std::unordered_map<symbol_t, size_t>& f
                                         leftNode->_Frequency + rightNode->_Frequency,
                                         leftNode,
                                         rightNode));
+
+        // Increase height
+        height += 1;
     }
 
     // Last elem is root
     root = prioq.top();
     prioq.pop();
 
-    return root;
+    return {root, height};
 }
 
-void _delete_subtree(_Huffman_Node* subroot)
+void _delete_tree(_Huffman_Node* subroot)
 {
     if (subroot == nullptr)
         return;
 
-    _delete_subtree(subroot->_Left);
-    _delete_subtree(subroot->_Right);
+    _delete_tree(subroot->_Left);
+    _delete_tree(subroot->_Right);
 
     delete subroot;
 }
 
-void _print_subtree(const size_t ident,
+void _print_tree(   const size_t ident,
                     const _Huffman_Node* const subroot,
-                    const std::string& rlFlag)
+                    const std::string& property)
 {
-    std::string str;
-    str.append(ident, '\t');
-
     if (subroot != nullptr)
-        std::cout << str << subroot->_Frequency << " [" << subroot->_Symbol << " " << rlFlag << "]\n";
+        std::cout   << std::string("").append(ident, '\t')
+                    << subroot->_Symbol
+                    << " [" << subroot->_Frequency << " "<< property << "]\n";
 
     if (subroot->_Left != nullptr)
-        _print_subtree(ident + 1, subroot->_Left, "LEFT");
+        _print_tree(ident + 1, subroot->_Left, "LEFT");
 
     if (subroot->_Right != nullptr)
-        _print_subtree(ident + 1, subroot->_Right, "RIGHT");
+        _print_tree(ident + 1, subroot->_Right, "RIGHT");
+}
+
+std::unordered_map<symbol_t, size_t> _get_symbol_frequencies(const std::string& filename)
+{
+    std::unordered_map<symbol_t, size_t> ret;
+
+    files::read_file_and_process_buffer(    filename,
+                                            [&ret](char* buffer, std::streamsize bytesRead)
+                                            {
+                                                for (std::streamsize i = 0; i < bytesRead; ++i)
+                                                    ++ret[buffer[i]];  // if buffer[i] is not found, it will create a default value (0), then increment it
+                                            }
+                                        );
+
+    return ret;
 }
 
 void _generate_huffman_codes_rec(   const _Huffman_Node* const subroot,
@@ -168,13 +191,13 @@ std::unordered_map<symbol_t, std::string> _generate_huffman_codes(const std::uno
 {
     std::unordered_map<symbol_t, std::string> ret;
 
-    _Huffman_Node* root = _build_huffman_tree(frequencies);
+    auto [root, height] = _build_huffman_tree(frequencies);
 
-    // _print_subtree(0, root, "ROOT");
+    // _print_tree(0, root, "ROOT");
 
     _generate_huffman_codes_rec(root, "", ret);
 
-    _delete_subtree(root);
+    _delete_tree(root);
 
     return ret;
 }
