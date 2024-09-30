@@ -10,8 +10,6 @@
 #include <filesystem>
 
 #include "_Core.h"
-#include "Thread_Pool.h"
-#include "Files.h"
 
 #define HUFFMAN_BEGIN namespace huffman {
 #define HUFFMAN_END }
