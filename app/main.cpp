@@ -54,9 +54,14 @@ void read_freq_from_file(const std::string& filename)
 
 int main(int argc, char** args)
 {
-    std::string folderPath = "H:\\Programare\\C++\\CompressionTool\\input.txt";
+    std::string folderPath1 = "H:\\Programare\\C++\\CompressionTool\\input.txt";
+    std::string folderPath2 = "H:\\Programare\\C++\\CompressionTool\\input.bin";
 
-    huffman::compress(folderPath);
+    Huffman_Compressor c1;
+    c1.compress(folderPath1);
+
+    Huffman_Compressor c2;
+    c2.decompress(folderPath2);
 
     return 0;
 }
