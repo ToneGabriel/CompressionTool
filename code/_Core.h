@@ -26,15 +26,11 @@ inline void __Assert(bool expr, const char* msg, const char* expected, const cha
 
 #define _ASSERT(Expr, Msg) __Assert(Expr, Msg, #Expr, __FILE__, __LINE__)
 
-#define DETAIL_BEGIN namespace detail {
-#define DETAIL_END }
-
-// #define BUFFER_SIZE 65536   // 64 * 1024 (64 KB)
-
 #define SYMBOL_BIT  CHAR_BIT
 #define ZERO_CHR    '0'
 #define ONE_CHR     '1'
 
-#define BIN_EXTENSION ".bin"
+#define HUFFMAN_EXTENSION   ".hff"
+#define LZ77_EXTENSION      ".lz77"
 
 using symbol_t = char;

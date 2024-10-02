@@ -1,9 +1,7 @@
-#include "Huffman_Compressor.h"
-
-namespace fs = std::filesystem;
+#include "_HuffmanNode.h"
 
 
-_Huffman_Node::_Huffman_Node(symbol_t symbol, size_t frequency, _Huffman_Node* left, _Huffman_Node* right)
+_HuffmanNode::_HuffmanNode(symbol_t symbol, size_t frequency, _HuffmanNode* left, _HuffmanNode* right)
     :   _Symbol(symbol),
         _Frequency(frequency),
         _Left(left),
@@ -13,7 +11,7 @@ _Huffman_Node::_Huffman_Node(symbol_t symbol, size_t frequency, _Huffman_Node* l
 }
 
 
-bool _Huffman_NodePtr_Greater_Compare::operator()(const _Huffman_Node* const left, const _Huffman_Node* const right)
+bool _HuffmanNodePtrGreaterCompare::operator()(const _HuffmanNode* const left, const _HuffmanNode* const right)
 {
     if (left->_Frequency == right->_Frequency)
         return left->_Symbol > right->_Symbol;  // Tie-breaking: compare by symbol

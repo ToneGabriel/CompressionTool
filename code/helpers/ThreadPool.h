@@ -29,7 +29,7 @@ using _EnableJobsFromContainer_t =
 
 
 template<size_t NThread = 2>
-class Thread_Pool
+class ThreadPool
 {
 private:
     std::queue<std::function<void(void)>>   _jobs;
@@ -45,18 +45,18 @@ private:
 public:
     // Constructors & Operators
 
-    Thread_Pool()
+    ThreadPool()
     {
         _open_pool();
     }
 
-    ~Thread_Pool()
+    ~ThreadPool()
     {
         _close_pool();
     }
 
-    Thread_Pool(const Thread_Pool& other)             = delete;
-    Thread_Pool& operator=(const Thread_Pool& other)  = delete;
+    ThreadPool(const ThreadPool& other)             = delete;
+    ThreadPool& operator=(const ThreadPool& other)  = delete;
 
 public:
     // Main functions
@@ -104,7 +104,7 @@ private:
 
         // Create the specified number of threads
         for (auto& t : _workerThreads)
-            t = std::thread(std::bind(&Thread_Pool::_worker_thread, this));
+            t = std::thread(std::bind(&ThreadPool::_worker_thread, this));
     }
 
     void _close_pool()
@@ -186,7 +186,7 @@ public:
         float progress  = 0;
 
         {   // empty scope start -> to control the lifecycle of the pool
-            Thread_Pool pool;
+            ThreadPool pool;
             pool.do_more_jobs(std::move(newJobs));
 
             // Start Display
@@ -209,6 +209,6 @@ public:
 
             // End Display
             std::cout << '\n';
-        }   // empty scope end -> Thread_Pool obj is destroyed, but waits for the threads to finish and join
+        }   // empty scope end -> ThreadPool obj is destroyed, but waits for the threads to finish and join
     }
-};  // END Thread_Pool
+};  // END ThreadPool
