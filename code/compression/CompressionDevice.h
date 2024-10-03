@@ -4,6 +4,7 @@
 #include <memory>
 
 #include "huffman/HuffmanCompressor.h"
+#include "lz77/LZ77Compressor.h"
 
 
 enum class ECompressor
