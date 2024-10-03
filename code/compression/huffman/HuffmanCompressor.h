@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstring>
 #include <string>
 #include <bitset>
 #include <queue>
@@ -28,10 +29,11 @@ private:
     _Code_Map       _codeMap;
     _HuffmanNode*   _root = nullptr;
 
+    symbol_t        _extension[EXTENSION_SIZE + 1];  // add null chr
+    symbol_t        _padding = 0;
+
     std::string     _originalFilename;
     std::string     _compressedFilename;
-    size_t          _originalSize;
-    size_t          _compressedSize;
 
 public:
 
@@ -45,17 +47,33 @@ public:
 
     void decompress(const std::string& filename) override;
 
-    std::string get_original_file_name() const;
-
-    std::string get_compressed_file_name() const;
-
-    size_t get_original_file_size() const;      // in bytes
-
-    size_t get_compressed_file_size() const;    // in bytes
-
-    double get_compression_ratio() const;
-
 private:
+
+    void _compute_padding()
+    {
+        size_t totalCompressedBits  = 0;
+        symbol_t leftoverBits       = 0;
+
+        for (auto& [symbol, count] : _frequencyMap)
+            totalCompressedBits += (count * _codeMap[symbol].size());
+
+        leftoverBits = totalCompressedBits % SYMBOL_BIT;
+
+        if (leftoverBits == 0)
+            _padding = 0;
+        else
+            _padding = SYMBOL_BIT - leftoverBits;
+    }
+
+    void _set_extension(const std::string& filename)
+    {
+        ::strncpy(_extension, fs::path(filename).extension().string().c_str(), EXTENSION_SIZE);
+    }
+
+    std::string _replace_extension(const std::string& filename, const std::string& extension)
+    {
+        return fs::path(filename).replace_extension(extension).string();
+    }
 
     size_t _compute_file_size(const std::string& filename) const;
 
@@ -77,9 +95,9 @@ private:
 
     void _generate_huffman_codes();
 
-    void _write_frequency_map(std::ofstream& ofile);
+    void _write_metadata(std::ofstream& ofile);
 
-    void _read_frequency_map(std::ifstream& ifile);
+    void _read_metadata(std::ifstream& ifile);
 
     void _encode_and_write_file(std::ifstream& ifile, std::ofstream& ofile);
 

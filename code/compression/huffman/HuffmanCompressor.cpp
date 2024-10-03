@@ -20,15 +20,12 @@ void HuffmanCompressor::compress(const std::string& filename)
     _compute_symbol_frequencies(ifile);
     _build_tree();
     _generate_huffman_codes();
-    _write_frequency_map(ofile);
+    _write_metadata(ofile);
     _encode_and_write_file(ifile, ofile);
     _delete_tree();
 
     ifile.close();
     ofile.close();
-
-    _originalSize   = _compute_file_size(_originalFilename);
-    _compressedSize = _compute_file_size(_compressedFilename);
 }
 
 void HuffmanCompressor::decompress(const std::string& filename)
@@ -41,41 +38,13 @@ void HuffmanCompressor::decompress(const std::string& filename)
     std::ifstream ifile(_compressedFilename, std::ios::binary);
     std::ofstream ofile(_originalFilename, std::ios::binary);
 
-    _read_frequency_map(ifile);
+    _read_metadata(ifile);
     _build_tree();
     _decode_and_write_file(ifile, ofile);
     _delete_tree();
 
     ifile.close();
     ofile.close();
-
-    _originalSize   = _compute_file_size(_originalFilename);
-    _compressedSize = _compute_file_size(_compressedFilename);
-}
-
-std::string HuffmanCompressor::get_original_file_name() const
-{
-    return _originalFilename;
-}
-
-std::string HuffmanCompressor::get_compressed_file_name() const
-{
-    return _compressedFilename;
-}
-
-size_t HuffmanCompressor::get_original_file_size() const   // in bytes
-{
-    return _originalSize;
-}
-
-size_t HuffmanCompressor::get_compressed_file_size() const // in bytes
-{
-    return _compressedSize;
-}
-
-double HuffmanCompressor::get_compression_ratio() const
-{
-    return 1.0 - static_cast<double>(_compressedSize) / static_cast<double>(_originalSize);
 }
 
 size_t HuffmanCompressor::_compute_file_size(const std::string& filename) const
@@ -166,9 +135,9 @@ void HuffmanCompressor::_compute_symbol_frequencies(std::ifstream& ifile)
     ifile.seekg(std::ios::beg); // reset file to beginning
 }
 
-void HuffmanCompressor::_generate_huffman_codes_impl(  const _HuffmanNode* const subroot,
-                                    const std::string& code,
-                                    std::unordered_map<symbol_t, std::string>& codes)
+void HuffmanCompressor::_generate_huffman_codes_impl(   const _HuffmanNode* const subroot,
+                                                        const std::string& code,
+                                                        std::unordered_map<symbol_t, std::string>& codes)
 {
     if (subroot == nullptr)
         return;
@@ -181,10 +150,10 @@ void HuffmanCompressor::_generate_huffman_codes_impl(  const _HuffmanNode* const
     }
 
     // traverse left subtree, append '0'
-    _generate_huffman_codes_impl(subroot->_Left, code + ZERO_CHR, codes);
+    _generate_huffman_codes_impl(subroot->_Left, code + SYMBOL_ZERO, codes);
 
     // traverse right subtree, append '1'
-    _generate_huffman_codes_impl(subroot->_Right, code + ONE_CHR, codes);
+    _generate_huffman_codes_impl(subroot->_Right, code + SYMBOL_ONE, codes);
 }
 
 void HuffmanCompressor::_generate_huffman_codes()
@@ -192,10 +161,17 @@ void HuffmanCompressor::_generate_huffman_codes()
     _generate_huffman_codes_impl(_root, "", _codeMap);
 }
 
-void HuffmanCompressor::_write_frequency_map(std::ofstream& ofile)
+void HuffmanCompressor::_write_metadata(std::ofstream& ofile)
 {
     _ASSERT(ofile.is_open(), "Output file is not open!");
 
+    // write extension
+    ofile.write(reinterpret_cast<const char*>(&_extension), sizeof(_extension));
+
+    // write padding
+    ofile.write(reinterpret_cast<const char*>(&_padding), sizeof(_padding));
+
+    // write frequency map and its size
     size_t mapSize = _frequencyMap.size();
     ofile.write(reinterpret_cast<const char*>(&mapSize), sizeof(mapSize));
 
@@ -208,10 +184,17 @@ void HuffmanCompressor::_write_frequency_map(std::ofstream& ofile)
     // DON'T close file
 }
 
-void HuffmanCompressor::_read_frequency_map(std::ifstream& ifile)
+void HuffmanCompressor::_read_metadata(std::ifstream& ifile)
 {
     _ASSERT(ifile.is_open(), "Input file is not open!");
 
+    // read extension
+    ifile.read(reinterpret_cast<char*>(&_extension), sizeof(_extension));
+
+    // read padding
+    ifile.read(reinterpret_cast<char*>(&_padding), sizeof(_padding));
+
+    // read frequency map and its size
     size_t      mapSize;
     symbol_t    symbol;
     size_t      count;
@@ -226,6 +209,8 @@ void HuffmanCompressor::_read_frequency_map(std::ifstream& ifile)
 
         _frequencyMap[symbol] = count;
     }
+
+    // DON'T close file
 }
 
 void HuffmanCompressor::_encode_and_write_file(std::ifstream& ifile, std::ofstream& ofile)
@@ -254,13 +239,17 @@ void HuffmanCompressor::_encode_and_write_file(std::ifstream& ifile, std::ofstre
     }
 
     // pad leftover bits in the buffer with 0s and write them as the last byte
-    if (!buffer.empty())
+    if (_padding != 0)
     {
         // Pad the remaining bits to form a full byte
-        buffer.append(SYMBOL_BIT - buffer.size(), ZERO_CHR);
+        buffer.append(_padding, SYMBOL_ZERO);
         std::bitset<SYMBOL_BIT> bits(buffer);
 
         ofile.put(static_cast<symbol_t>(bits.to_ulong()));
+    }
+    else
+    {
+        // do nothing - no padding needed
     }
 
     // DON'T close files
@@ -282,7 +271,7 @@ void HuffmanCompressor::_decode_and_write_file(std::ifstream& ifile, std::ofstre
 
         for (symbol_t digit : buffer)
         {
-            if (digit == ZERO_CHR)
+            if (digit == SYMBOL_ZERO)
                 currentNode = currentNode->_Left;
             else
                 currentNode = currentNode->_Right;
