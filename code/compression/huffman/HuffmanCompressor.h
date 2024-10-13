@@ -12,7 +12,7 @@
 #include <filesystem>
 
 #include "ICompressor.h"
-#include "_HuffmanNode.h"
+#include "_HuffmanTree.h"
 
 
 namespace fs = std::filesystem;
@@ -25,9 +25,6 @@ private:
     using _Code_Map         = std::unordered_map<symbol_t, std::string>;
 
 private:
-    _Frequency_Map  _frequencyMap;
-    _Code_Map       _codeMap;
-    _HuffmanNode*   _root = nullptr;
 
     symbol_t        _extension[EXTENSION_SIZE + 1];  // add null chr
     symbol_t        _padding = 0;
@@ -39,7 +36,7 @@ public:
 
     HuffmanCompressor() = default;
     
-    ~HuffmanCompressor();
+    ~HuffmanCompressor() = default;
 
 public:
 
@@ -49,13 +46,14 @@ public:
 
 private:
 
-    void _compute_padding()
+    void _compute_padding(  const std::map<symbol_t, size_t>& frequencyMap,
+                            const std::unordered_map<symbol_t, std::string>& codeMap)
     {
         size_t totalCompressedBits  = 0;
         symbol_t leftoverBits       = 0;
 
-        for (auto& [symbol, count] : _frequencyMap)
-            totalCompressedBits += (count * _codeMap[symbol].size());
+        for (auto& [symbol, count] : frequencyMap)
+            totalCompressedBits += (count * codeMap.at(symbol).size());
 
         leftoverBits = totalCompressedBits % SYMBOL_BIT;
 
@@ -76,30 +74,4 @@ private:
     }
 
     size_t _compute_file_size(const std::string& filename) const;
-
-    void _build_tree();
-
-    void _delete_tree_impl(_HuffmanNode* subroot);
-
-    void _delete_tree();
-
-    void _print_tree_impl(const size_t ident, const _HuffmanNode* const subroot, const std::string& property) const;
-
-    void _print_tree() const;
-
-    void _compute_symbol_frequencies(std::ifstream& ifile);
-
-    void _generate_huffman_codes_impl(  const _HuffmanNode* const subroot,
-                                        const std::string& code,
-                                        std::unordered_map<symbol_t, std::string>& codes);
-
-    void _generate_huffman_codes();
-
-    void _write_metadata(std::ofstream& ofile);
-
-    void _read_metadata(std::ifstream& ifile);
-
-    void _encode_and_write_file(std::ifstream& ifile, std::ofstream& ofile);
-
-    void _decode_and_write_file(std::ifstream& ifile, std::ofstream& ofile);
 };  // END HuffmanCompressor

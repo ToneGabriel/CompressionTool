@@ -2,14 +2,13 @@
 
 
 
-HuffmanCompressor::~HuffmanCompressor()
-{
-    _delete_tree();
-}
-
 void HuffmanCompressor::compress(const std::string& filename)
 {
     _ASSERT(fs::exists(filename), "File not found!");
+
+    _HuffmanTree                                tree;
+    std::map<symbol_t, size_t>                  frequencyMap;
+    std::unordered_map<symbol_t, std::string>   codeMap;
 
     _originalFilename   = filename;
     _compressedFilename = fs::path(filename).replace_extension(HUFFMAN_EXTENSION).string();
@@ -17,12 +16,73 @@ void HuffmanCompressor::compress(const std::string& filename)
     std::ifstream ifile(_originalFilename, std::ios::binary);
     std::ofstream ofile(_compressedFilename, std::ios::binary);
 
-    _compute_symbol_frequencies(ifile);
-    _build_tree();
-    _generate_huffman_codes();
-    _write_metadata(ofile);
-    _encode_and_write_file(ifile, ofile);
-    _delete_tree();
+    {   // compute symbol frequencies
+        symbol_t symbol;
+
+        while (ifile.get(symbol))
+            ++frequencyMap[symbol];
+
+        ifile.clear();              // clear error flags
+        ifile.seekg(std::ios::beg); // reset file to beginning
+    }
+
+    tree.build(frequencyMap);
+    codeMap = tree.generate_huffman_codes();
+
+    {   // write metadata
+
+        // write extension
+        ofile.write(reinterpret_cast<const char*>(&_extension), sizeof(_extension));
+
+        // write padding
+        ofile.write(reinterpret_cast<const char*>(&_padding), sizeof(_padding));
+
+        // write frequency map and its size
+        size_t mapSize = frequencyMap.size();
+        ofile.write(reinterpret_cast<const char*>(&mapSize), sizeof(mapSize));
+
+        for (const auto& [symbol, count] : frequencyMap)
+        {
+            ofile.write(reinterpret_cast<const char*>(&symbol), sizeof(symbol));
+            ofile.write(reinterpret_cast<const char*>(&count), sizeof(count));
+        }
+    }
+
+    {   // encode and write file
+        std::string buffer;
+        symbol_t    symbol;
+
+        while (ifile.get(symbol))
+        {
+            buffer.append(codeMap.at(symbol));
+
+            while (buffer.size() >= SYMBOL_BIT)
+            {
+                // take necessary bits from buffer and transform them into bitset
+                std::bitset<SYMBOL_BIT> bits(buffer, 0, SYMBOL_BIT);
+
+                // remaining bits will be used in next iterations
+                buffer.erase(0, SYMBOL_BIT);
+
+                // transform bits from bitset into a symbol and write it
+                ofile.put(static_cast<symbol_t>(bits.to_ulong()));
+            }
+        }
+
+        // pad leftover bits in the buffer with 0s and write them as the last byte
+        if (_padding != 0)
+        {
+            // Pad the remaining bits to form a full byte
+            buffer.append(_padding, SYMBOL_ZERO);
+            std::bitset<SYMBOL_BIT> bits(buffer);
+
+            ofile.put(static_cast<symbol_t>(bits.to_ulong()));
+        }
+        else
+        {
+            // do nothing - no padding needed
+        }
+    }   // END encode and write file
 
     ifile.close();
     ofile.close();
@@ -32,16 +92,66 @@ void HuffmanCompressor::decompress(const std::string& filename)
 {
     _ASSERT(fs::exists(filename), "File not found!");
 
+    _HuffmanTree                                tree;
+    std::map<symbol_t, size_t>                  frequencyMap;
+    std::unordered_map<symbol_t, std::string>   codeMap;
+
     _originalFilename   = fs::path(filename).replace_extension(".txtd").string();
     _compressedFilename = filename;
 
     std::ifstream ifile(_compressedFilename, std::ios::binary);
     std::ofstream ofile(_originalFilename, std::ios::binary);
 
-    _read_metadata(ifile);
-    _build_tree();
-    _decode_and_write_file(ifile, ofile);
-    _delete_tree();
+    {   // read metadata
+
+        // read extension
+        ifile.read(reinterpret_cast<char*>(&_extension), sizeof(_extension));
+
+        // read padding
+        ifile.read(reinterpret_cast<char*>(&_padding), sizeof(_padding));
+
+        // read frequency map and its size
+        size_t      mapSize;
+        symbol_t    symbol;
+        size_t      count;
+
+        ifile.read(reinterpret_cast<char*>(&mapSize), sizeof(mapSize));
+
+        for (size_t i = 0; i < mapSize; ++i)
+        {
+
+            ifile.read(reinterpret_cast<char*>(&symbol), sizeof(symbol));
+            ifile.read(reinterpret_cast<char*>(&count), sizeof(count));
+
+            frequencyMap[symbol] = count;
+        }
+    }   // END read metadata
+
+    tree.build(frequencyMap);
+
+    {   // decode and write file
+        std::string buffer;
+        symbol_t    symbol;
+
+        auto traversor = tree.traversor_begin();
+
+        while (ifile.get(symbol))
+        {
+            std::bitset<SYMBOL_BIT> bits(symbol);
+            buffer = std::move(bits.to_string());
+
+            for (symbol_t digit : buffer)
+            {
+                if (!traversor.is_leaf())
+                    traversor += digit;
+                else
+                {
+                    ofile.put(traversor.get_symbol());  // write the character to the output file
+                    traversor = tree.traversor_begin(); // reset to root for next character
+                }
+            }
+        }
+    }   // END decode and write file
 
     ifile.close();
     ofile.close();
@@ -51,240 +161,4 @@ size_t HuffmanCompressor::_compute_file_size(const std::string& filename) const
 {
     std::ifstream file(filename, std::ios::binary | std::ios::ate); // open in binary mode and go to the end
     return static_cast<size_t>(file.tellg());
-}
-
-void HuffmanCompressor::_build_tree()
-{
-    _ASSERT(!_frequencyMap.empty(), "No frequency data!");
-
-    // create leaf nodes for each symbol and push them to the priority queue
-    std::priority_queue<_HuffmanNode*,
-                        std::vector<_HuffmanNode*>,
-                        _HuffmanNodePtrGreaterCompare> prioq;
-
-    _HuffmanNode* leftNode     = nullptr;
-    _HuffmanNode* rightNode    = nullptr;
-
-    for (const auto& [symbol, frequency] : _frequencyMap)
-        prioq.push(new _HuffmanNode(symbol, frequency));
-
-    while (prioq.size() > 1)    // Last elem will be root
-    {
-        // remove two nodes of lowest frequency
-        leftNode = prioq.top();
-        prioq.pop();
-
-        rightNode = prioq.top();
-        prioq.pop();
-        
-        // create a new internal subroot with these two nodes as children
-        prioq.push(new _HuffmanNode(   static_cast<symbol_t>(0),
-                                        leftNode->_Frequency + rightNode->_Frequency,
-                                        leftNode,
-                                        rightNode));
-    }
-
-    // last elem is root
-    _root = prioq.top();
-    prioq.pop();
-}
-
-void HuffmanCompressor::_delete_tree_impl(_HuffmanNode* subroot)
-{
-    if (subroot == nullptr)
-        return;
-
-    _delete_tree_impl(subroot->_Left);
-    _delete_tree_impl(subroot->_Right);
-
-    delete subroot;
-}
-
-void HuffmanCompressor::_delete_tree()
-{
-    _delete_tree_impl(_root);
-}
-
-void HuffmanCompressor::_print_tree_impl(const size_t ident, const _HuffmanNode* const subroot, const std::string& property) const
-{
-    if (subroot != nullptr)
-        std::cout   << std::string("").append(ident, '\t')
-                    << subroot->_Symbol
-                    << " [" << subroot->_Frequency << " "<< property << "]\n";
-
-    if (subroot->_Left != nullptr)
-        _print_tree_impl(ident + 1, subroot->_Left, "LEFT");
-
-    if (subroot->_Right != nullptr)
-        _print_tree_impl(ident + 1, subroot->_Right, "RIGHT");
-}
-
-void HuffmanCompressor::_print_tree() const
-{
-    _print_tree_impl(0, _root, "ROOT");
-}
-
-void HuffmanCompressor::_compute_symbol_frequencies(std::ifstream& ifile)
-{
-    symbol_t symbol;
-
-    while (ifile.get(symbol))
-        ++_frequencyMap[symbol];
-
-    ifile.clear();              // clear error flags
-    ifile.seekg(std::ios::beg); // reset file to beginning
-}
-
-void HuffmanCompressor::_generate_huffman_codes_impl(   const _HuffmanNode* const subroot,
-                                                        const std::string& code,
-                                                        std::unordered_map<symbol_t, std::string>& codes)
-{
-    if (subroot == nullptr)
-        return;
-
-    // if it's a leaf node, store the code
-    if (subroot->_Left == nullptr && subroot->_Right == nullptr)
-    {
-        codes[subroot->_Symbol] = code;
-        return;
-    }
-
-    // traverse left subtree, append '0'
-    _generate_huffman_codes_impl(subroot->_Left, code + SYMBOL_ZERO, codes);
-
-    // traverse right subtree, append '1'
-    _generate_huffman_codes_impl(subroot->_Right, code + SYMBOL_ONE, codes);
-}
-
-void HuffmanCompressor::_generate_huffman_codes()
-{
-    _generate_huffman_codes_impl(_root, "", _codeMap);
-}
-
-void HuffmanCompressor::_write_metadata(std::ofstream& ofile)
-{
-    _ASSERT(ofile.is_open(), "Output file is not open!");
-
-    // write extension
-    ofile.write(reinterpret_cast<const char*>(&_extension), sizeof(_extension));
-
-    // write padding
-    ofile.write(reinterpret_cast<const char*>(&_padding), sizeof(_padding));
-
-    // write frequency map and its size
-    size_t mapSize = _frequencyMap.size();
-    ofile.write(reinterpret_cast<const char*>(&mapSize), sizeof(mapSize));
-
-    for (const auto& [symbol, count] : _frequencyMap)
-    {
-        ofile.write(reinterpret_cast<const char*>(&symbol), sizeof(symbol));
-        ofile.write(reinterpret_cast<const char*>(&count), sizeof(count));
-    }
-
-    // DON'T close file
-}
-
-void HuffmanCompressor::_read_metadata(std::ifstream& ifile)
-{
-    _ASSERT(ifile.is_open(), "Input file is not open!");
-
-    // read extension
-    ifile.read(reinterpret_cast<char*>(&_extension), sizeof(_extension));
-
-    // read padding
-    ifile.read(reinterpret_cast<char*>(&_padding), sizeof(_padding));
-
-    // read frequency map and its size
-    size_t      mapSize;
-    symbol_t    symbol;
-    size_t      count;
-
-    ifile.read(reinterpret_cast<char*>(&mapSize), sizeof(mapSize));
-
-    for (size_t i = 0; i < mapSize; ++i)
-    {
-
-        ifile.read(reinterpret_cast<char*>(&symbol), sizeof(symbol));
-        ifile.read(reinterpret_cast<char*>(&count), sizeof(count));
-
-        _frequencyMap[symbol] = count;
-    }
-
-    // DON'T close file
-}
-
-void HuffmanCompressor::_encode_and_write_file(std::ifstream& ifile, std::ofstream& ofile)
-{
-    _ASSERT(ifile.is_open(), "Input file is not open!");
-    _ASSERT(ofile.is_open(), "Output file is not open!");
-
-    std::string buffer;
-    symbol_t    symbol;
-
-    while (ifile.get(symbol))
-    {
-        buffer.append(_codeMap.at(symbol));
-
-        while (buffer.size() >= SYMBOL_BIT)
-        {
-            // take necessary bits from buffer and transform them into bitset
-            std::bitset<SYMBOL_BIT> bits(buffer, 0, SYMBOL_BIT);
-
-            // remaining bits will be used in next iterations
-            buffer.erase(0, SYMBOL_BIT);
-
-            // transform bits from bitset into a symbol and write it
-            ofile.put(static_cast<symbol_t>(bits.to_ulong()));
-        }
-    }
-
-    // pad leftover bits in the buffer with 0s and write them as the last byte
-    if (_padding != 0)
-    {
-        // Pad the remaining bits to form a full byte
-        buffer.append(_padding, SYMBOL_ZERO);
-        std::bitset<SYMBOL_BIT> bits(buffer);
-
-        ofile.put(static_cast<symbol_t>(bits.to_ulong()));
-    }
-    else
-    {
-        // do nothing - no padding needed
-    }
-
-    // DON'T close files
-}
-
-void HuffmanCompressor::_decode_and_write_file(std::ifstream& ifile, std::ofstream& ofile)
-{
-    _ASSERT(ifile.is_open(), "Input file is not open!");
-    _ASSERT(ofile.is_open(), "Output file is not open!");
-
-    _HuffmanNode*  currentNode = _root;
-    std::string     buffer;
-    symbol_t        symbol;
-
-    while (ifile.get(symbol))
-    {
-        std::bitset<SYMBOL_BIT> bits(symbol);
-        buffer = std::move(bits.to_string());
-
-        for (symbol_t digit : buffer)
-        {
-            if (digit == SYMBOL_ZERO)
-                currentNode = currentNode->_Left;
-            else
-                currentNode = currentNode->_Right;
-
-            if (currentNode->_Left == nullptr && currentNode->_Right == nullptr)
-            {
-                ofile.put(currentNode->_Symbol);    // write the character to the output file
-                currentNode = _root;                // reset to root for next character
-            }
-            else
-            {
-                // do nothing - currentNode remains the same
-            }
-        }
-    }
 }
