@@ -10,10 +10,7 @@
 #include <deque>
 
 #include "ICompressor.h"
-#include "LargeFileOpener.h"
 
-
-#define USING_DEQUE
 
 class LZ77Compressor //: public ICompressor
 {
@@ -30,9 +27,12 @@ public:
 
     void compressFile(const std::string& inputFilePath, const std::string& outputFilePath)
     {
-#ifdef USING_DEQUE
         const int WINDOW_SIZE = 4096;  // Size of the search buffer (sliding window)
         const int LOOKAHEAD_SIZE = 1024; // Size of the lookahead buffer
+
+        std::deque<char> searchBuffer;
+        std::deque<char> lookaheadBuffer;
+        char readBuffer[LOOKAHEAD_SIZE];
 
         std::ifstream inputFile(inputFilePath, std::ios::binary);
         if (!inputFile.is_open())
@@ -48,42 +48,36 @@ public:
             return;
         }
 
-        std::deque<char> searchBuffer;
-        std::deque<char> lookaheadBuffer;
-
-        char buffer[LOOKAHEAD_SIZE];
-
         // Initial read to fill the lookahead buffer
-        inputFile.read(buffer, LOOKAHEAD_SIZE);
-        lookaheadBuffer.insert(lookaheadBuffer.end(), buffer, buffer + inputFile.gcount());
+        inputFile.read(readBuffer, LOOKAHEAD_SIZE);
+        lookaheadBuffer.insert(lookaheadBuffer.end(), readBuffer, readBuffer + inputFile.gcount());
 
         while (!lookaheadBuffer.empty())
         {
             LZ77Match match {0, 0, 0};
 
             // Search for the longest match in the search buffer
-            for (int j = 0; j < searchBuffer.size(); ++j)
+            for (int i = 0; i < searchBuffer.size(); ++i)
             {
                 int matchLength = 0;
                 while (matchLength < lookaheadBuffer.size() &&
-                       j + matchLength < searchBuffer.size() &&
-                       searchBuffer[j + matchLength] == lookaheadBuffer[matchLength])
+                       i + matchLength < searchBuffer.size() &&
+                       searchBuffer[i + matchLength] == lookaheadBuffer[matchLength])
                 {
                     ++matchLength;
                 }
 
                 if (matchLength > match.length)
                 {
-                    match.offset = searchBuffer.size() - j;
+                    match.offset = searchBuffer.size() - i;
                     match.length = matchLength;
                 }
             }
 
-            // Emit match data
             if (match.length < lookaheadBuffer.size())
                 match.nextChar = lookaheadBuffer[match.length]; // else nextChar is 0
 
-            // write match
+            // Write match
             outputFile.write(reinterpret_cast<const char*>(&match.offset), sizeof(match.offset));
             outputFile.write(reinterpret_cast<const char*>(&match.length), sizeof(match.length));
             outputFile.write(reinterpret_cast<const char*>(&match.nextChar), sizeof(match.nextChar));
@@ -99,87 +93,22 @@ public:
                 lookaheadBuffer.pop_front();
             }
 
-            // Refill the lookahead buffer if necessary
-            char c;
-            while(lookaheadBuffer.size() < LOOKAHEAD_SIZE && !inputFile.eof())
+            // Refill the lookahead buffer
+            if (lookaheadBuffer.size() < LOOKAHEAD_SIZE)
             {
-                inputFile.read(reinterpret_cast<char*>(&c), sizeof(c));
-                lookaheadBuffer.push_back(c);
+                inputFile.read(readBuffer, LOOKAHEAD_SIZE - lookaheadBuffer.size());
+                lookaheadBuffer.insert(lookaheadBuffer.end(), readBuffer, readBuffer + inputFile.gcount());
             }
-
-
-            // int shiftSize = match.length + 1;
-            // char c;
-            // for (int i = 0; i < shiftSize && !inputFile.eof(); ++i)
-            // {
-            //     if (searchBuffer.size() >= WINDOW_SIZE)
-            //         searchBuffer.pop_front(); // Maintain window size
-            //     searchBuffer.push_back(lookaheadBuffer.front());
-
-            //     lookaheadBuffer.pop_front();
-            //     inputFile.read(reinterpret_cast<char*>(&c), sizeof(c));
-            //     lookaheadBuffer.push_back(c);
-            // }
         }
 
         inputFile.close();
         outputFile.close();
-
-#else
-
-        LargeFileOpener inputFile(inputFilePath);
-        std::ofstream outputFile(outputFilePath, std::ios::binary);
-
-        const char* fileData    = inputFile.data();
-        LONGLONG fileSize       = inputFile.size();
-        LONGLONG fileIndex      = 0LL;
-
-        // TODO: compute sizes
-        LONGLONG windowSize             = 4096LL;
-        LONGLONG lookaheadBufferSize    = 1024LL;
-
-        // compress
-        while (fileIndex < fileSize)
-        {
-            LZ77Match match {0, 0, 0};
-
-            // Find the longest match in the sliding window
-            for (LONGLONG i = std::max(0LL, fileIndex - windowSize); i < fileIndex; ++i)    // i from windowStart to fileIndex
-            {
-                LONGLONG length = 0LL;
-                while ( length < lookaheadBufferSize &&
-                        fileIndex + length < fileSize &&
-                        fileData[i + length] == fileData[fileIndex + length])
-                {
-                    ++length;
-                }
-
-                if (length > match.length)
-                {
-                    match.length = length;
-                    match.offset = fileIndex - i;
-                }
-            }
-
-            if (fileIndex + match.length < fileSize)
-                match.nextChar = fileData[fileIndex + match.length];    // else nextChar is 0
-
-            fileIndex += match.length + 1;
-
-            // write match
-            outputFile.write(reinterpret_cast<const char*>(&match.offset), sizeof(match.offset));
-            outputFile.write(reinterpret_cast<const char*>(&match.length), sizeof(match.length));
-            outputFile.write(reinterpret_cast<const char*>(&match.nextChar), sizeof(match.nextChar));
-        }
-
-        inputFile.close();
-        outputFile.close();
-
-#endif
     }
 
     void decompressFile(const std::string& inputFilePath, const std::string& outputFilePath)
     {
+        const int WINDOW_SIZE = 4096;
+
         std::ifstream inputFile(inputFilePath, std::ios::binary);
         if (!inputFile.is_open())
         {
@@ -194,64 +123,42 @@ public:
             return;
         }
 
-        std::string decompressedData;
         LZ77Match match;
-        
+        std::deque<char> decompressedBuffer;
+
         while (inputFile.read(reinterpret_cast<char*>(&match.offset), sizeof(match.offset)))
         {
             inputFile.read(reinterpret_cast<char*>(&match.length), sizeof(match.length));
             inputFile.read(reinterpret_cast<char*>(&match.nextChar), sizeof(match.nextChar));
 
-            // Handle the match by copying the referenced part of the buffer
+            // Write the match from the history (search buffer) directly to the output file
             if (match.offset > 0 && match.length > 0)
             {
-                int start = decompressedData.size() - match.offset;
+                char c;
+                int start = decompressedBuffer.size() - match.offset;
                 for (int i = 0; i < match.length; ++i)
                 {
-                    decompressedData += decompressedData[start + i];  // Copy from the history
+                    c = decompressedBuffer[start + i];
+                    outputFile.write(&c, sizeof(c));  // Write directly to the file
+                    decompressedBuffer.push_back(c);  // Add to the search buffer
                 }
             }
 
-            // Add the next character if it exists
+            // Write the next literal character directly to the output file
             if (match.nextChar != 0)
             {
-                decompressedData += match.nextChar;
+                outputFile.write(&match.nextChar, sizeof(match.nextChar));
+                decompressedBuffer.push_back(match.nextChar);  // Add to the search buffer
             }
-        }
 
-        // Write any remaining decompressed data to the output file
-        if (!decompressedData.empty())
-        {
-            outputFile.write(decompressedData.c_str(), decompressedData.size());
+            // Maintain a maximum buffer size to simulate the sliding window
+            while (decompressedBuffer.size() > WINDOW_SIZE)
+            {
+                decompressedBuffer.pop_front();  // Remove old entries from the buffer
+            }
         }
 
         inputFile.close();
         outputFile.close();
     }
-
-private:
-
-    // std::string decompress(const std::vector<LZ77Match>& compressedData)
-    // {
-    //     std::string decompressedData;
-
-    //     for (const auto& match : compressedData)
-    //     {
-    //         if (match.offset > 0 && match.length > 0)
-    //         {
-    //             int start = decompressedData.size() - match.offset;
-    //             for (int i = 0; i < match.length; ++i)
-    //             {
-    //                 decompressedData += decompressedData[start + i];
-    //             }
-    //         }
-
-    //         if (match.nextChar != 0)
-    //         {
-    //             decompressedData += match.nextChar;
-    //         }
-    //     }
-
-    //     return decompressedData;
-    // }
 };  // END LZ77Compressor
