@@ -12,22 +12,20 @@ int main(int argc, char** args)
 
     // ==============================================================================
 
-    // LZ77Compressor lz77;
-    // int windowSize = 1024;           // Larger window for more complex data
-    // int lookaheadBufferSize = 64;    // Larger buffer for finding matches
+    LZ77Compressor lz77;
 
-    // // Paths for input/output files
-    // std::string inputFilePath = "H:\\Programare\\C++\\CompressionTool\\input.txt";
-    // std::string compressedFilePath = "H:\\Programare\\C++\\CompressionTool\\compressed.lz77";
-    // std::string decompressedFilePath = "H:\\Programare\\C++\\CompressionTool\\decompressed.txt";
+    // Paths for input/output files
+    std::string inputFilePath = "C:\\Personal\\C++\\CompressionTool\\input.txt";
+    std::string compressedFilePath = "C:\\Personal\\C++\\CompressionTool\\compressed.lz77";
+    std::string decompressedFilePath = "C:\\Personal\\C++\\CompressionTool\\decompressed.txt";
 
-    // // Compress the file
-    // lz77.compressFile(inputFilePath, compressedFilePath, windowSize, lookaheadBufferSize);
-    // std::cout << "Compression complete. Compressed data written to " << compressedFilePath << std::endl;
+    // Compress the file
+    lz77.compressFile(inputFilePath, compressedFilePath);
+    std::cout << "Compression complete. Compressed data written to " << compressedFilePath << std::endl;
 
-    // // Decompress the file
-    // lz77.decompressFile(compressedFilePath, decompressedFilePath);
-    // std::cout << "Decompression complete. Decompressed data written to " << decompressedFilePath << std::endl;
+    // Decompress the file
+    lz77.decompressFile(compressedFilePath, decompressedFilePath);
+    std::cout << "Decompression complete. Decompressed data written to " << decompressedFilePath << std::endl;
 
     return 0;
 }
