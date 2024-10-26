@@ -2,23 +2,14 @@
 
 #include <cstring>
 #include <string>
-#include <bitset>
-#include <queue>
 #include <map>
 #include <unordered_map>
-
-#include <iostream>
-#include <fstream>
-#include <filesystem>
 
 #include "ICompressor.h"
 #include "_HuffmanTree.h"
 
 
-namespace fs = std::filesystem;
-
-
-class HuffmanCompressor : public ICompressor
+class HuffmanCompressor// : public ICompressor
 {
 private:
     using _Frequency_Map    = std::map<symbol_t, size_t>;                   // used ordered map to ensure the tree is built the same
@@ -40,9 +31,9 @@ public:
 
 public:
 
-    void compress(const std::string& filename) override;
+    void compress(const std::string& filename);// override;
 
-    void decompress(const std::string& filename) override;
+    void decompress(const std::string& filename);// override;
 
 private:
 
@@ -63,15 +54,15 @@ private:
             _padding = SYMBOL_BIT - leftoverBits;
     }
 
-    void _set_extension(const std::string& filename)
-    {
-        ::strncpy(_extension, fs::path(filename).extension().string().c_str(), EXTENSION_SIZE);
-    }
+    // void _set_extension(const std::string& filename)
+    // {
+    //     ::strncpy(_extension, fs::path(filename).extension().string().c_str(), EXTENSION_SIZE);
+    // }
 
-    std::string _replace_extension(const std::string& filename, const std::string& extension)
-    {
-        return fs::path(filename).replace_extension(extension).string();
-    }
+    // std::string _replace_extension(const std::string& filename, const std::string& extension)
+    // {
+    //     return fs::path(filename).replace_extension(extension).string();
+    // }
 
     size_t _compute_file_size(const std::string& filename) const;
 };  // END HuffmanCompressor

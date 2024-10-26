@@ -1,4 +1,4 @@
-#include "compression/CompressionDevice.h"
+#include "compression/CompressorFactory.h"
 
 
 int main(int argc, char** args)
@@ -6,9 +6,9 @@ int main(int argc, char** args)
     // std::string folderPath1 = "H:\\Programare\\C++\\CompressionTool\\input.txt";
     // std::string folderPath2 = "H:\\Programare\\C++\\CompressionTool\\input.bin";
 
-    // CompressionDevice cd;
-    // cd.compress(folderPath1, ECompressor::e_HUFFMAN);
-    // cd.decompress(folderPath2, ECompressor::e_HUFFMAN);
+    // CompressorFactory cf;
+    // cf.compress(folderPath1, ECompressor::e_HUFFMAN);
+    // cf.decompress(folderPath2, ECompressor::e_HUFFMAN);
 
     // ==============================================================================
 
@@ -20,11 +20,11 @@ int main(int argc, char** args)
     std::string decompressedFilePath = "C:\\Personal\\C++\\CompressionTool\\decompressed.txt";
 
     // Compress the file
-    lz77.compressFile(inputFilePath, compressedFilePath);
+    lz77.compress(inputFilePath, compressedFilePath);
     std::cout << "Compression complete. Compressed data written to " << compressedFilePath << std::endl;
 
     // Decompress the file
-    lz77.decompressFile(compressedFilePath, decompressedFilePath);
+    lz77.decompress(compressedFilePath, decompressedFilePath);
     std::cout << "Decompression complete. Decompressed data written to " << decompressedFilePath << std::endl;
 
     return 0;

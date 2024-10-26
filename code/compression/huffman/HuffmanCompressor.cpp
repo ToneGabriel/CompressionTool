@@ -1,6 +1,13 @@
 #include "HuffmanCompressor.h"
 
+#include <bitset>
+#include <queue>
 
+#include <iostream>
+#include <fstream>
+#include <filesystem>
+
+namespace fs = std::filesystem;
 
 void HuffmanCompressor::compress(const std::string& filename)
 {

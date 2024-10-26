@@ -14,14 +14,14 @@ enum class ECompressor
 };  // END ECompressor
 
 
-class CompressionDevice
+class CompressorFactory
 {
 public:
 
-    void compress(const std::string& path, ECompressor comp);
-    void decompress(const std::string& path, ECompressor comp);
+    void compress(const std::string& inputFilePath, const std::string& outputFilePath, ECompressor comp);
+    void decompress(const std::string& inputFilePath, const std::string& outputFilePath, ECompressor comp);
 
 private:
 
     std::unique_ptr<ICompressor> _get_compressor(ECompressor comp);
-};  // END CompressionDevice
+};  // END CompressorFactory
