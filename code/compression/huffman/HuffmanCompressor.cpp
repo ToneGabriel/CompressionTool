@@ -9,16 +9,16 @@
 
 namespace fs = std::filesystem;
 
-void HuffmanCompressor::compress(const std::string& filename)
+void HuffmanCompressor::compress(const std::string& inputFilePath, const std::string& outputFilePath)
 {
-    _ASSERT(fs::exists(filename), "File not found!");
+    _ASSERT(fs::exists(inputFilePath), "File not found!");
 
     _HuffmanTree                                tree;
     std::map<symbol_t, size_t>                  frequencyMap;
     std::unordered_map<symbol_t, std::string>   codeMap;
 
-    _originalFilename   = filename;
-    _compressedFilename = fs::path(filename).replace_extension(HUFFMAN_EXTENSION).string();
+    _originalFilename   = inputFilePath;
+    _compressedFilename = fs::path(inputFilePath).replace_extension(HUFFMAN_EXTENSION).string();
 
     std::ifstream ifile(_originalFilename, std::ios::binary);
     std::ofstream ofile(_compressedFilename, std::ios::binary);
@@ -95,16 +95,16 @@ void HuffmanCompressor::compress(const std::string& filename)
     ofile.close();
 }
 
-void HuffmanCompressor::decompress(const std::string& filename)
+void HuffmanCompressor::decompress(const std::string& inputFilePath, const std::string& outputFilePath)
 {
-    _ASSERT(fs::exists(filename), "File not found!");
+    _ASSERT(fs::exists(inputFilePath), "File not found!");
 
     _HuffmanTree                                tree;
     std::map<symbol_t, size_t>                  frequencyMap;
     std::unordered_map<symbol_t, std::string>   codeMap;
 
-    _originalFilename   = fs::path(filename).replace_extension(".txtd").string();
-    _compressedFilename = filename;
+    _originalFilename   = fs::path(inputFilePath).replace_extension(".txtd").string();
+    _compressedFilename = inputFilePath;
 
     std::ifstream ifile(_compressedFilename, std::ios::binary);
     std::ofstream ofile(_originalFilename, std::ios::binary);

@@ -9,7 +9,7 @@
 #include "_HuffmanTree.h"
 
 
-class HuffmanCompressor// : public ICompressor
+class HuffmanCompressor : public ICompressor
 {
 private:
     using _Frequency_Map    = std::map<symbol_t, size_t>;                   // used ordered map to ensure the tree is built the same
@@ -26,14 +26,12 @@ private:
 public:
 
     HuffmanCompressor() = default;
-    
     ~HuffmanCompressor() = default;
 
 public:
 
-    void compress(const std::string& filename);// override;
-
-    void decompress(const std::string& filename);// override;
+    void compress(const std::string& inputFilePath, const std::string& outputFilePath) override;
+    void decompress(const std::string& inputFilePath, const std::string& outputFilePath) override;
 
 private:
 
