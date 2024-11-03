@@ -1,32 +1,35 @@
 #include <iostream>
 
-#include "compression/CompressorFacade.h"
+#include "../code/EncoderFacade.h"
 
+
+// C:\\Personal\\C++\\CompressionTool
+// H:\\Programare\\C++\\CompressionTool
 
 int main(int argc, char** args)
 {
     // std::string folderPath1 = "H:\\Programare\\C++\\CompressionTool\\input.txt";
     // std::string folderPath2 = "H:\\Programare\\C++\\CompressionTool\\input.bin";
 
-    // CompressorFacade cf;
-    // cf.compress(folderPath1, ECompressor::e_HUFFMAN);
-    // cf.decompress(folderPath2, ECompressor::e_HUFFMAN);
+    // EncoderFacade ef;
+    // ef.compress(folderPath1, EEncoder::e_HUFFMAN);
+    // ef.decompress(folderPath2, EEncoder::e_HUFFMAN);
 
     // ==============================================================================
 
-    CompressorFacade cf;
+    EncoderFacade ef;
 
     // Paths for input/output files
-    std::string inputFilePath = "C:\\Personal\\C++\\CompressionTool\\input.txt";
-    std::string compressedFilePath = "C:\\Personal\\C++\\CompressionTool\\compressed.lz77";
-    std::string decompressedFilePath = "C:\\Personal\\C++\\CompressionTool\\decompressed.txt";
+    std::string inputFilePath = "H:\\Programare\\C++\\CompressionTool\\input.txt";
+    std::string compressedFilePath = "H:\\Programare\\C++\\CompressionTool\\compressed.lz77";
+    std::string decompressedFilePath = "H:\\Programare\\C++\\CompressionTool\\decompressed.txt";
 
     // Compress the file
-    cf.compress(inputFilePath, compressedFilePath, ECompressor::e_LZ77);
+    ef.encode(inputFilePath, compressedFilePath, EEncoder::e_LZ77);
     std::cout << "Compression complete. Compressed data written to " << compressedFilePath << std::endl;
 
     // Decompress the file
-    cf.decompress(compressedFilePath, decompressedFilePath, ECompressor::e_LZ77);
+    ef.decode(compressedFilePath, decompressedFilePath, EEncoder::e_LZ77);
     std::cout << "Decompression complete. Decompressed data written to " << decompressedFilePath << std::endl;
 
     return 0;

@@ -7,7 +7,7 @@
 #include <deque>
 
 
-void LZ77Compressor::compress(const std::string& inputFilePath, const std::string& outputFilePath)
+void LZ77Compressor::encode(const std::string& inputFilePath, const std::string& outputFilePath)
 {
     std::deque<char> searchBuffer;
     std::deque<char> lookaheadBuffer;
@@ -39,7 +39,7 @@ void LZ77Compressor::compress(const std::string& inputFilePath, const std::strin
         for (int i = 0; i < searchBuffer.size(); ++i)
         {
             int matchLength = 0;
-            while (matchLength < lookaheadBuffer.size() &&
+            while ( matchLength < lookaheadBuffer.size() &&
                     i + matchLength < searchBuffer.size() &&
                     searchBuffer[i + matchLength] == lookaheadBuffer[matchLength])
             {
@@ -84,7 +84,7 @@ void LZ77Compressor::compress(const std::string& inputFilePath, const std::strin
     outputFile.close();
 }
 
-void LZ77Compressor::decompress(const std::string& inputFilePath, const std::string& outputFilePath)
+void LZ77Compressor::decode(const std::string& inputFilePath, const std::string& outputFilePath)
 {
     std::ifstream inputFile(inputFilePath, std::ios::binary);
     if (!inputFile.is_open())
@@ -103,11 +103,10 @@ void LZ77Compressor::decompress(const std::string& inputFilePath, const std::str
     _LZ77Match match;
     std::deque<char> decompressedBuffer;
 
-    while (inputFile.read(reinterpret_cast<char*>(&match._Offset), sizeof(match._Offset)))
+    while ( inputFile.read(reinterpret_cast<char*>(&match._Offset), sizeof(match._Offset)) &&
+            inputFile.read(reinterpret_cast<char*>(&match._Length), sizeof(match._Length)) &&
+            inputFile.read(reinterpret_cast<char*>(&match._NextChar), sizeof(match._NextChar)))
     {
-        inputFile.read(reinterpret_cast<char*>(&match._Length), sizeof(match._Length));
-        inputFile.read(reinterpret_cast<char*>(&match._NextChar), sizeof(match._NextChar));
-
         // Write the match from the history (search buffer) directly to the output file
         if (match._Offset > 0 && match._Length > 0)
         {
@@ -130,9 +129,7 @@ void LZ77Compressor::decompress(const std::string& inputFilePath, const std::str
 
         // Maintain a maximum buffer size to simulate the sliding window
         while (decompressedBuffer.size() > WINDOW_SIZE)
-        {
             decompressedBuffer.pop_front();  // Remove old entries from the buffer
-        }
     }
 
     inputFile.close();

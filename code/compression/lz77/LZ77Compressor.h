@@ -2,10 +2,10 @@
 
 #include <string>
 
-#include "ICompressor.h"
+#include "IEncoder.h"
 
 
-class LZ77Compressor : public ICompressor
+class LZ77Compressor : public IEncoder
 {
 private:
 
@@ -14,7 +14,7 @@ private:
         int _Offset;
         int _Length;
         char _NextChar;
-    };
+    };  // END _LZ77Match
 
 private:
 
@@ -23,6 +23,6 @@ private:
 
 public:
 
-    void compress(const std::string& inputFilePath, const std::string& outputFilePath) override;
-    void decompress(const std::string& inputFilePath, const std::string& outputFilePath) override;
+    void encode(const std::string& inputFilePath, const std::string& outputFilePath) override;
+    void decode(const std::string& inputFilePath, const std::string& outputFilePath) override;
 };  // END LZ77Compressor

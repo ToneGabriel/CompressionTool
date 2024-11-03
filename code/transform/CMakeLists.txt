@@ -4,5 +4,5 @@ target_sources(${LIBRARY_NAME} PUBLIC
 
 )
 
-add_subdirectory(huffman)
-add_subdirectory(lz77)
+add_subdirectory(bwt)
+add_subdirectory(mtf)

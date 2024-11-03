@@ -9,7 +9,7 @@
 
 namespace fs = std::filesystem;
 
-void HuffmanCompressor::compress(const std::string& inputFilePath, const std::string& outputFilePath)
+void HuffmanCompressor::encode(const std::string& inputFilePath, const std::string& outputFilePath)
 {
     _ASSERT(fs::exists(inputFilePath), "File not found!");
 
@@ -95,7 +95,7 @@ void HuffmanCompressor::compress(const std::string& inputFilePath, const std::st
     ofile.close();
 }
 
-void HuffmanCompressor::decompress(const std::string& inputFilePath, const std::string& outputFilePath)
+void HuffmanCompressor::decode(const std::string& inputFilePath, const std::string& outputFilePath)
 {
     _ASSERT(fs::exists(inputFilePath), "File not found!");
 

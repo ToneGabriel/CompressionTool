@@ -5,11 +5,11 @@
 #include <map>
 #include <unordered_map>
 
-#include "ICompressor.h"
+#include "IEncoder.h"
 #include "_HuffmanTree.h"
 
 
-class HuffmanCompressor : public ICompressor
+class HuffmanCompressor : public IEncoder
 {
 private:
     using _Frequency_Map    = std::map<symbol_t, size_t>;                   // used ordered map to ensure the tree is built the same
@@ -30,8 +30,8 @@ public:
 
 public:
 
-    void compress(const std::string& inputFilePath, const std::string& outputFilePath) override;
-    void decompress(const std::string& inputFilePath, const std::string& outputFilePath) override;
+    void encode(const std::string& inputFilePath, const std::string& outputFilePath) override;
+    void decode(const std::string& inputFilePath, const std::string& outputFilePath) override;
 
 private:
 
