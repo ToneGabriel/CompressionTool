@@ -3,7 +3,7 @@
 #include "compression/huffman/HuffmanCompressor.h"
 #include "compression/lz77/LZ77Compressor.h"
 
-#include "transform/bwt/BWTTransform.h"
+#include "transform/bwt/BWTransform.h"
 #include "transform/mtf/MTFTransform.h"
 
 
@@ -37,7 +37,7 @@ std::unique_ptr<IEncoder> EncoderFacade::_get_encoder(EEncoder type)
         }
         case EEncoder::e_BWT:
         {
-            ret = std::make_unique<BWTTransform>();
+            ret = std::make_unique<BWTransform>();
             break;
         }
         case EEncoder::e_MTF:
