@@ -1,6 +1,6 @@
 #include <iostream>
 
-#include "../code/EncoderFacade.h"
+#include "../code/encoding/EncoderFacade.h"
 
 // C:\\Personal\\C++\\CompressionTool
 // H:\\Programare\\C++\\CompressionTool
