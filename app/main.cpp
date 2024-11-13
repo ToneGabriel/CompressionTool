@@ -5,6 +5,18 @@
 // C:\\Personal\\C++\\CompressionTool
 // H:\\Programare\\C++\\CompressionTool
 
+// #define MAIN_ARG_COUNT      5
+// #define C_FLAG              "-c"
+// #define D_FLAG              "-d"
+
+// #define ARG_COUNT           argc
+// #define EXECUTABLE_NAME     args[0]
+// #define COMPRESSION_FLAG    args[1]
+// #define COMPRESSION_METHOD  args[2]
+// #define INPUT_PATH          args[3]
+// #define OUTPUT_PATH         args[4]
+
+
 int main(int argc, char** args)
 {
     EncoderFacade ef;
@@ -21,6 +33,23 @@ int main(int argc, char** args)
     // Decompress the file
     ef.decode(encodedFilePath, decodedFilePath, EEncoder::e_MTF);
     std::cout << "Decoding complete. Data written to " << decodedFilePath << std::endl;
+
+    //std::cout << "Running: " << EXECUTABLE_NAME << '\n';
+    // if (ARG_COUNT != MAIN_ARG_COUNT)
+    //     return 1;
+
+    // if (COMPRESSION_FLAG == C_FLAG)
+    // {
+    //     EncoderFacade ef;
+    //     ef.encode(INPUT_PATH, OUTPUT_PATH, EEncoder::e_LZ77);
+    //     ef.encode(INPUT_PATH, OUTPUT_PATH, EEncoder::e_HUFFMAN);
+    // }
+    // else if (COMPRESSION_FLAG == D_FLAG)
+    // {
+
+    // }
+    // else
+    //     return 1;
 
     return 0;
 }

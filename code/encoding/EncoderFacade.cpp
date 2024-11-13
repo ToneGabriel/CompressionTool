@@ -21,33 +21,25 @@ void EncoderFacade::decode(const std::string& inputFilePath, const std::string& 
 
 std::unique_ptr<IEncoder> EncoderFacade::_get_encoder(EEncoder type)
 {
-    std::unique_ptr<IEncoder> ret;
-
     switch (type)
     {
         case EEncoder::e_HUFFMAN:
         {
-            ret = std::make_unique<HuffmanCompressor>();
-            break;
+            return std::make_unique<HuffmanCompressor>();
         }
         case EEncoder::e_LZ77:
         {
-            ret = std::make_unique<LZ77Compressor>();
-            break;
+            return std::make_unique<LZ77Compressor>();
         }
         case EEncoder::e_BWT:
         {
-            ret = std::make_unique<BWTransform>();
-            break;
+            return std::make_unique<BWTransform>();
         }
         case EEncoder::e_MTF:
         {
-            ret = std::make_unique<MTFTransform>();
-            break;
+            return std::make_unique<MTFTransform>();
         }
         default:
-            throw std::invalid_argument("Unsupported compressor type"); // in case of EEncoder extension
+            throw std::invalid_argument("Unsupported encoder type"); // in case of EEncoder extension
     }
-
-    return ret;
 }
