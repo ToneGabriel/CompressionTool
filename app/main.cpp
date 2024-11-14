@@ -1,6 +1,6 @@
 #include <iostream>
 
-#include "../code/encoding/EncoderFacade.h"
+#include "../code/encoding/Encoders.h"
 
 // C:\\Personal\\C++\\CompressionTool
 // H:\\Programare\\C++\\CompressionTool
@@ -19,37 +19,24 @@
 
 int main(int argc, char** args)
 {
-    EncoderFacade ef;
+    SequentialEncoder seqEncoder;
 
     // Paths for input/output files
-    std::string inputFilePath = "H:\\Programare\\C++\\CompressionTool\\input.txt";
+    std::string inputFilePath   = "H:\\Programare\\C++\\CompressionTool\\input.txt";
     std::string encodedFilePath = "H:\\Programare\\C++\\CompressionTool\\encoded.bin";
     std::string decodedFilePath = "H:\\Programare\\C++\\CompressionTool\\decoded.txt";
 
     // Compress the file
-    ef.encode(inputFilePath, encodedFilePath, EEncoder::e_MTF);
+    seqEncoder.add_to_sequence(EEncoderType::e_MTF);
+    seqEncoder.encode(inputFilePath, encodedFilePath);
+    seqEncoder.clear_sequence();
     std::cout << "Encoding complete. Data written to " << encodedFilePath << std::endl;
 
     // Decompress the file
-    ef.decode(encodedFilePath, decodedFilePath, EEncoder::e_MTF);
+    seqEncoder.add_to_sequence(EEncoderType::e_MTF);
+    seqEncoder.decode(encodedFilePath, decodedFilePath);
+    seqEncoder.clear_sequence();
     std::cout << "Decoding complete. Data written to " << decodedFilePath << std::endl;
-
-    //std::cout << "Running: " << EXECUTABLE_NAME << '\n';
-    // if (ARG_COUNT != MAIN_ARG_COUNT)
-    //     return 1;
-
-    // if (COMPRESSION_FLAG == C_FLAG)
-    // {
-    //     EncoderFacade ef;
-    //     ef.encode(INPUT_PATH, OUTPUT_PATH, EEncoder::e_LZ77);
-    //     ef.encode(INPUT_PATH, OUTPUT_PATH, EEncoder::e_HUFFMAN);
-    // }
-    // else if (COMPRESSION_FLAG == D_FLAG)
-    // {
-
-    // }
-    // else
-    //     return 1;
 
     return 0;
 }

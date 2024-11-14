@@ -13,7 +13,7 @@ inline void __Assert(bool expr, const char* msg, const char* expected, const cha
     if (!expr)
     {
         std::cerr   << "Assert failed:\t"   << msg      << "\n"
-                    << "Expected:\t"        << expected  << "\n"
+                    << "Expected:\t"        << expected << "\n"
                     << "File:\t\t"          << file     << "\n"
                     << "Line:\t\t"          << line     << "\n";
         ::abort();
