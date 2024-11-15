@@ -33,15 +33,16 @@ public:
 
 public:
 
-    void add_to_sequence(EEncoderType method);
+    void add_to_sequence(EEncoderType type);
     void clear_sequence();
+    bool empty_sequence() const;
 
     void encode(const std::string& inputFilePath, const std::string& outputFilePath);
     void decode(const std::string& inputFilePath, const std::string& outputFilePath);
 
 private:
 
-    void _set_current_encoder(EEncoderType method);   // factory method
+    void _set_current_encoder(EEncoderType type);   // factory method
 
     void _encode(const std::string& inputFilePath, const std::string& outputFilePath);
     void _decode(const std::string& inputFilePath, const std::string& outputFilePath);

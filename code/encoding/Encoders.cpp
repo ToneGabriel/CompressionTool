@@ -17,8 +17,16 @@ void SequentialEncoder::clear_sequence()
     _encodeSequence.clear();
 }
 
+bool SequentialEncoder::empty_sequence() const
+{
+    return _encodeSequence.empty();
+}
+
 void SequentialEncoder::encode(const std::string& inputFilePath, const std::string& outputFilePath)
 {
+    if (empty_sequence())
+        throw std::runtime_error("Empty sequence!");
+
     // TODO: create temp files
     for (EEncoderType type : _encodeSequence)
     {
@@ -29,6 +37,9 @@ void SequentialEncoder::encode(const std::string& inputFilePath, const std::stri
 
 void SequentialEncoder::decode(const std::string& inputFilePath, const std::string& outputFilePath)
 {
+    if (empty_sequence())
+        throw std::runtime_error("Empty sequence!");
+
     // TODO: create temp files
     for (EEncoderType type : _encodeSequence)
     {
@@ -62,20 +73,20 @@ void SequentialEncoder::_set_current_encoder(EEncoderType type)
             break;
         }
         default:
-            throw std::invalid_argument("Unsupported encode type"); // in case of EEncoderType extension
+            throw std::invalid_argument("Unsupported encoder type"); // in case of EEncoderType extension
     }
 }
 
 void SequentialEncoder::_encode(const std::string& inputFilePath, const std::string& outputFilePath)
 {
-    _ASSERT(_currentEncoder != nullptr, "No encoder selected!");
+    _ASSERT(_currentEncoder.get() != nullptr, "No encoder selected!");
 
     _currentEncoder->encode(inputFilePath, outputFilePath);
 }
 
 void SequentialEncoder::_decode(const std::string& inputFilePath, const std::string& outputFilePath)
 {
-    _ASSERT(_currentEncoder != nullptr, "No encoder selected!");
+    _ASSERT(_currentEncoder.get() != nullptr, "No encoder selected!");
 
     _currentEncoder->decode(inputFilePath, outputFilePath);
 }
