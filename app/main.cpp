@@ -26,17 +26,17 @@ int main(int argc, char** args)
     std::string encodedFilePath = "H:\\Programare\\C++\\CompressionTool\\encoded.bin";
     std::string decodedFilePath = "H:\\Programare\\C++\\CompressionTool\\decoded.txt";
 
-    // Compress the file
-    seqEncoder.add_to_sequence(EEncoderType::e_MTF);
-    seqEncoder.encode(inputFilePath, encodedFilePath);
+    // Encode the file
+    seqEncoder.add_to_sequence(EEncoderType::e_LZ77);
+    seqEncoder.encode(inputFilePath);
     seqEncoder.clear_sequence();
-    std::cout << "Encoding complete. Data written to " << encodedFilePath << std::endl;
+    std::cout << "Encoding complete." << std::endl;
 
-    // Decompress the file
-    seqEncoder.add_to_sequence(EEncoderType::e_MTF);
-    seqEncoder.decode(encodedFilePath, decodedFilePath);
+    // Decode the file
+    seqEncoder.add_to_sequence(EEncoderType::e_LZ77);
+    seqEncoder.decode(encodedFilePath);
     seqEncoder.clear_sequence();
-    std::cout << "Decoding complete. Data written to " << decodedFilePath << std::endl;
+    std::cout << "Decoding complete." << std::endl;
 
     return 0;
 }

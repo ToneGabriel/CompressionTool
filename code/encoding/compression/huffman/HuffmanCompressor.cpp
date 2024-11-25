@@ -18,7 +18,7 @@ void HuffmanCompressor::encode(const std::string& inputFilePath, const std::stri
     std::unordered_map<symbol_t, std::string>   codeMap;
 
     _originalFilename   = inputFilePath;
-    _compressedFilename = fs::path(inputFilePath).replace_extension(HUFFMAN_EXTENSION).string();
+    _compressedFilename = fs::path(inputFilePath).replace_extension(BIN_EXTENSION).string();
 
     std::ifstream ifile(_originalFilename, std::ios::binary);
     std::ofstream ofile(_compressedFilename, std::ios::binary);

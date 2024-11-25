@@ -17,7 +17,7 @@ private:
 
 private:
 
-    symbol_t        _extension[EXTENSION_SIZE + 1];  // add null chr
+    symbol_t        _extension[10 + 1];  // add null chr
     symbol_t        _padding = 0;
 
     std::string     _originalFilename;

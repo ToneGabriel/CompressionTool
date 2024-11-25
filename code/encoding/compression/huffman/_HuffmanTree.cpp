@@ -43,7 +43,7 @@ _HuffmanTreeTraversor& _HuffmanTreeTraversor::operator+=(symbol_t digit)
 
 bool _HuffmanTreeTraversor::is_leaf() const
 {
-    return _current->_Left == nullptr;  // right is also null
+    return _current->_Left == nullptr && _current->_Right == nullptr;
 }
 
 
@@ -115,6 +115,7 @@ void _HuffmanTree::clear()
 
 void _HuffmanTree::print() const
 {
+    _check_tree();
     _print_tree_impl(0, _root, "ROOT");
 }
 

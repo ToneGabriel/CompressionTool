@@ -30,8 +30,6 @@ inline void __Assert(bool expr, const char* msg, const char* expected, const cha
 #define SYMBOL_ZERO         '0'
 #define SYMBOL_ONE          '1'
 
-#define EXTENSION_SIZE      10
-#define HUFFMAN_EXTENSION   ".hff"
-#define LZ77_EXTENSION      ".lz77"
+#define BIN_EXTENSION       ".bin"
 
 using symbol_t = char;
