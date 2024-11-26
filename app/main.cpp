@@ -28,13 +28,13 @@ int main(int argc, char** args)
 
     // Encode the file
     seqEncoder.add_to_sequence(EEncoderType::e_LZ77);
-    seqEncoder.encode(inputFilePath);
+    seqEncoder.encode(inputFilePath, encodedFilePath);
     seqEncoder.clear_sequence();
     std::cout << "Encoding complete." << std::endl;
 
     // Decode the file
     seqEncoder.add_to_sequence(EEncoderType::e_LZ77);
-    seqEncoder.decode(encodedFilePath);
+    seqEncoder.decode(encodedFilePath, decodedFilePath);
     seqEncoder.clear_sequence();
     std::cout << "Decoding complete." << std::endl;
 

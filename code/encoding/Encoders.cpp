@@ -10,32 +10,23 @@
 
 
 // BasicEncoder =====================================================
-void BasicEncoder::set_encoder(EEncoderType type)
+void BasicEncoder::set_type(EEncoderType type)
 {
     _currentEncoderType = type;
 }
 
-EEncoderType BasicEncoder::get_encoder() const
+EEncoderType BasicEncoder::get_type() const
 {
     return _currentEncoderType;
 }
 
-bool BasicEncoder::is_valid() const
-{
-    return _currentEncoderType != EEncoderType::e_INVALID;
-}
-
 void BasicEncoder::encode(const std::string& inputFilePath, const std::string& outputFilePath)
 {
-    _ASSERT(is_valid(), "Invalid encoder!");
-
     _get_encoder(_currentEncoderType)->encode(inputFilePath, outputFilePath);
 }
 
 void BasicEncoder::decode(const std::string& inputFilePath, const std::string& outputFilePath)
 {
-    _ASSERT(is_valid(), "Invalid encoder!");
-
     _get_encoder(_currentEncoderType)->decode(inputFilePath, outputFilePath);
 }
 
@@ -81,66 +72,80 @@ bool SequentialEncoder::empty_sequence() const
     return _encodeSequence.empty();
 }
 
-void SequentialEncoder::encode(const std::string& inputFilePath)
+void SequentialEncoder::encode(const std::string& inputFilePath, const std::string& outputFilePath)
 {
     _ASSERT(!empty_sequence(), "Empty sequence!");
 
-    // Create a dedicated working folder in the temporary directory (gets deleted automatically)
-    TemporaryFileWorkspace tempWorkspace(2);
-
-    // Encoder to do the work
-    BasicEncoder encoder;
-
-    std::string currentInputFile = inputFilePath;
-    std::string currentOutputFile;
-
-    for (EEncoderType type : _encodeSequence)
+    try
     {
-        // Generate a temporary output file path
-        currentOutputFile = tempWorkspace.create_local_file(BIN_EXTENSION);
+        // Create a dedicated working folder in the temporary directory (gets deleted automatically)
+        TemporaryFileWorkspace tempWorkspace(2);
 
-        // Encode
-        encoder.set_encoder(type);
-        encoder.encode(currentInputFile, currentOutputFile);
+        // Encoder to do the work
+        BasicEncoder encoder;
 
-        // Update the input file for the next step
-        currentInputFile = currentOutputFile;
+        std::string currentInputFile = inputFilePath;
+        std::string currentOutputFile;
+
+        for (EEncoderType type : _encodeSequence)
+        {
+            // Generate a temporary output file path
+            currentOutputFile = tempWorkspace.create_local_file(BIN_EXTENSION);
+
+            // Encode
+            encoder.set_type(type);
+            encoder.encode(currentInputFile, currentOutputFile);
+
+            // Update the input file for the next step
+            currentInputFile = currentOutputFile;
+        }
+
+        // Move the last encoded file to the final name
+        tempWorkspace.move_local_file(currentInputFile, outputFilePath);
     }
-
-    // Move the last encoded file to the final name
-    tempWorkspace.move_local_file("", "");
-    // fs::rename(currentInputFile, _get_encode_file_path(inputFilePath));
+    catch(const std::exception& e)
+    {
+        std::cerr << e.what() << '\n';
+        RERAISE;
+    }
 }
 
-void SequentialEncoder::decode(const std::string& inputFilePath)
+void SequentialEncoder::decode(const std::string& inputFilePath, const std::string& outputFilePath)
 {
     _ASSERT(!empty_sequence(), "Empty sequence!");
 
-    // Create a dedicated working folder in the temporary directory (gets deleted automatically)
-    TemporaryFileWorkspace tempWorkspace(2);
-
-    // Encoder to do the work
-    BasicEncoder encoder;
-
-    std::string currentInputFile = inputFilePath;
-    std::string currentOutputFile;
-
-    for (EEncoderType type : _encodeSequence)
+    try
     {
-        // Generate a temporary output file path
-        currentOutputFile = tempWorkspace.create_local_file(BIN_EXTENSION);
+        // Create a dedicated working folder in the temporary directory (gets deleted automatically)
+        TemporaryFileWorkspace tempWorkspace(2);
 
-        // Decode
-        encoder.set_encoder(type);
-        encoder.decode(currentInputFile, currentOutputFile);
+        // Encoder to do the work
+        BasicEncoder encoder;
 
-        // Update the input file for the next step
-        currentInputFile = currentOutputFile;
+        std::string currentInputFile = inputFilePath;
+        std::string currentOutputFile;
+
+        for (EEncoderType type : _encodeSequence)
+        {
+            // Generate a temporary output file path
+            currentOutputFile = tempWorkspace.create_local_file(BIN_EXTENSION);
+
+            // Decode
+            encoder.set_type(type);
+            encoder.decode(currentInputFile, currentOutputFile);
+
+            // Update the input file for the next step
+            currentInputFile = currentOutputFile;
+        }
+
+        // Move the last encoded file to the final name
+        tempWorkspace.move_local_file(currentInputFile, outputFilePath);
     }
-
-    // Move the last encoded file to the final name
-    tempWorkspace.move_local_file("", "");
-    // fs::rename(currentInputFile, _get_decode_file_path(inputFilePath));
+    catch(const std::exception& e)
+    {
+        std::cerr << e.what() << '\n';
+        RERAISE;
+    }
 }
 
 std::string SequentialEncoder::_get_encode_file_path(const std::string& path) const

@@ -15,19 +15,19 @@ enum class EEncoderType
     e_BWT,
     e_MTF,
 
-    e_INVALID
+    e_DEFAULT = e_HUFFMAN
 };  // END EEncoderType
 
 
-class BasicEncoder  // Facade for using different encoders
+class BasicEncoder  // Facade for using different encoders and controlling their lifecycle
 {
 private:
     EEncoderType _currentEncoderType;
 
 public:
 
-    BasicEncoder()
-        : _currentEncoderType(EEncoderType::e_INVALID) { /* Empty */ }
+    BasicEncoder(EEncoderType type = EEncoderType::e_DEFAULT)
+        : _currentEncoderType(type) { /*Empty */ }
 
     ~BasicEncoder() = default;
 
@@ -36,10 +36,8 @@ public:
 
 public:
 
-    void set_encoder(EEncoderType type);
-    EEncoderType get_encoder() const;
-
-    bool is_valid() const;
+    void set_type(EEncoderType type);
+    EEncoderType get_type() const;
 
     void encode(const std::string& inputFilePath, const std::string& outputFilePath);
     void decode(const std::string& inputFilePath, const std::string& outputFilePath);
@@ -68,8 +66,8 @@ public:
     void clear_sequence();
     bool empty_sequence() const;
 
-    void encode(const std::string& inputFilePath);
-    void decode(const std::string& inputFilePath);
+    void encode(const std::string& inputFilePath, const std::string& outputFilePath);
+    void decode(const std::string& inputFilePath, const std::string& outputFilePath);
 
 private:
 
