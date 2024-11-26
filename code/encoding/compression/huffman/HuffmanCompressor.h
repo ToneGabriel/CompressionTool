@@ -1,12 +1,11 @@
 #pragma once
 
-#include <cstring>
+#include "IEncoder.h"
+#include "_HuffmanTree.h"
+
 #include <string>
 #include <map>
 #include <unordered_map>
-
-#include "IEncoder.h"
-#include "_HuffmanTree.h"
 
 
 class HuffmanCompressor : public IEncoder
@@ -51,16 +50,4 @@ private:
         else
             _padding = SYMBOL_BIT - leftoverBits;
     }
-
-    // void _set_extension(const std::string& filename)
-    // {
-    //     ::strncpy(_extension, fs::path(filename).extension().string().c_str(), EXTENSION_SIZE);
-    // }
-
-    // std::string _replace_extension(const std::string& filename, const std::string& extension)
-    // {
-    //     return fs::path(filename).replace_extension(extension).string();
-    // }
-
-    size_t _compute_file_size(const std::string& filename) const;
 };  // END HuffmanCompressor

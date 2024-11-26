@@ -163,9 +163,3 @@ void HuffmanCompressor::decode(const std::string& inputFilePath, const std::stri
     ifile.close();
     ofile.close();
 }
-
-size_t HuffmanCompressor::_compute_file_size(const std::string& filename) const
-{
-    std::ifstream file(filename, std::ios::binary | std::ios::ate); // open in binary mode and go to the end
-    return static_cast<size_t>(file.tellg());
-}

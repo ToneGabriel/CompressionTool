@@ -54,6 +54,28 @@ _HuffmanTree::~_HuffmanTree()
     clear();
 }
 
+_HuffmanTree::_HuffmanTree(const _HuffmanTree& other)
+{
+    _copy_tree(other);
+}
+
+_HuffmanTree::_HuffmanTree(_HuffmanTree&& other) noexcept
+{
+    _move_tree(std::move(other));
+}
+
+_HuffmanTree& _HuffmanTree::operator=(const _HuffmanTree& other)
+{
+    // TODO: implement
+    return *this;
+}
+
+_HuffmanTree& _HuffmanTree::operator=(_HuffmanTree&& other) noexcept
+{
+    // TODO: implement
+    return *this;
+}
+
 _HuffmanTreeTraversor _HuffmanTree::traversor_begin() const
 {
     return _HuffmanTreeTraversor(_root);
@@ -104,6 +126,7 @@ std::unordered_map<symbol_t, std::string> _HuffmanTree::generate_huffman_codes()
 
     std::unordered_map<symbol_t, std::string> ret;
     _generate_huffman_codes_impl(_root, "", ret);
+
     return ret;
 }
 
@@ -122,6 +145,16 @@ void _HuffmanTree::print() const
 bool _HuffmanTree::empty() const
 {
     return _root == nullptr;
+}
+
+void _HuffmanTree::_copy_tree(const _HuffmanTree& other)
+{
+    // TODO: implement
+}
+
+void _HuffmanTree::_move_tree(_HuffmanTree&& other) noexcept
+{
+    // TODO: implement
 }
 
 void _HuffmanTree::_check_tree() const
