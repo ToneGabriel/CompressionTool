@@ -20,7 +20,7 @@ const size_t& _HuffmanTreeTraversor::get_frequency() const
     return _current->_Frequency;
 }
 
-_HuffmanTreeTraversor& _HuffmanTreeTraversor::operator+=(symbol_t digit)
+_HuffmanTreeTraversor& _HuffmanTreeTraversor::operator+=(const symbol_t& digit)
 {
     _ASSERT(_current != nullptr, "Traversor reached end!");
 
@@ -43,6 +43,8 @@ _HuffmanTreeTraversor& _HuffmanTreeTraversor::operator+=(symbol_t digit)
 
 bool _HuffmanTreeTraversor::is_leaf() const
 {
+    _ASSERT(_current != nullptr, "Traversor reached end!");
+
     return _current->_Left == nullptr && _current->_Right == nullptr;
 }
 

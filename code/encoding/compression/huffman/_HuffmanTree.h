@@ -27,7 +27,7 @@ public:
     const size_t& get_frequency() const;
     bool is_leaf() const;
 
-    _HuffmanTreeTraversor& operator+=(symbol_t digit);
+    _HuffmanTreeTraversor& operator+=(const symbol_t& digit);
 };  // END _HuffmanTreeTraversor
 
 

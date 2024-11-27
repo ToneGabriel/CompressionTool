@@ -9,23 +9,15 @@
 
 void LZ77Compressor::encode(const std::string& inputFilePath, const std::string& outputFilePath)
 {
+    std::ifstream inputFile(inputFilePath, std::ios::binary);
+    std::ofstream outputFile(outputFilePath, std::ios::binary);
+
+    if (!inputFile.is_open() || !outputFile.is_open())
+        throw std::runtime_error("Could not open input or output files!");
+
     std::deque<char> searchBuffer;
     std::deque<char> lookaheadBuffer;
     char readBuffer[LOOKAHEAD_SIZE];
-
-    std::ifstream inputFile(inputFilePath, std::ios::binary);
-    if (!inputFile.is_open())
-    {
-        std::cerr << "Error: Could not open file " << inputFilePath << std::endl;
-        return;
-    }
-
-    std::ofstream outputFile(outputFilePath, std::ios::binary);
-    if (!outputFile.is_open())
-    {
-        std::cerr << "Error: Could not open file " << outputFilePath << std::endl;
-        return;
-    }
 
     // Initial read to fill the lookahead buffer
     inputFile.read(readBuffer, LOOKAHEAD_SIZE);
@@ -79,26 +71,15 @@ void LZ77Compressor::encode(const std::string& inputFilePath, const std::string&
             lookaheadBuffer.insert(lookaheadBuffer.end(), readBuffer, readBuffer + inputFile.gcount());
         }
     }
-
-    inputFile.close();
-    outputFile.close();
 }
 
 void LZ77Compressor::decode(const std::string& inputFilePath, const std::string& outputFilePath)
 {
     std::ifstream inputFile(inputFilePath, std::ios::binary);
-    if (!inputFile.is_open())
-    {
-        std::cerr << "Could not open the input file." << std::endl;
-        return;
-    }
-
     std::ofstream outputFile(outputFilePath, std::ios::binary);
-    if (!outputFile.is_open())
-    {
-        std::cerr << "Could not open the output file." << std::endl;
-        return;
-    }
+
+    if (!inputFile.is_open() || !outputFile.is_open())
+        throw std::runtime_error("Could not open input or output files!");
 
     _LZ77Match match;
     std::deque<char> decompressedBuffer;
@@ -131,7 +112,4 @@ void LZ77Compressor::decode(const std::string& inputFilePath, const std::string&
         while (decompressedBuffer.size() > WINDOW_SIZE)
             decompressedBuffer.pop_front();  // Remove old entries from the buffer
     }
-
-    inputFile.close();
-    outputFile.close();
 }

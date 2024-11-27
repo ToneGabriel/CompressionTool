@@ -90,7 +90,7 @@ void SequentialEncoder::encode(const std::string& inputFilePath, const std::stri
         for (EEncoderType type : _encodeSequence)
         {
             // Generate a temporary output file path
-            currentOutputFile = tempWorkspace.create_local_file(BIN_EXTENSION);
+            currentOutputFile = tempWorkspace.create_local_file();
 
             // Encode
             encoder.set_type(type);
@@ -128,7 +128,7 @@ void SequentialEncoder::decode(const std::string& inputFilePath, const std::stri
         for (EEncoderType type : _encodeSequence)
         {
             // Generate a temporary output file path
-            currentOutputFile = tempWorkspace.create_local_file(BIN_EXTENSION);
+            currentOutputFile = tempWorkspace.create_local_file();
 
             // Decode
             encoder.set_type(type);
@@ -146,17 +146,4 @@ void SequentialEncoder::decode(const std::string& inputFilePath, const std::stri
         std::cerr << e.what() << '\n';
         RERAISE;
     }
-}
-
-std::string SequentialEncoder::_get_encode_file_path(const std::string& path) const
-{
-    std::string ret = path + BIN_EXTENSION;
-    return ret;
-}
-
-std::string SequentialEncoder::_get_decode_file_path(const std::string& path) const
-{
-    std::string ret = path;
-    ret.erase(path.size() - sizeof(BIN_EXTENSION) + 1);
-    return ret;
 }

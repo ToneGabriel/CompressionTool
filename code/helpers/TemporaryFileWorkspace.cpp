@@ -1,5 +1,6 @@
 #include "TemporaryFileWorkspace.h"
 
+#include <fstream>
 #include <filesystem>
 
 namespace fs = std::filesystem;
@@ -10,7 +11,7 @@ TemporaryFileWorkspace::TemporaryFileWorkspace(size_t maxFileCount)
 {
     // create path by appending to temp directory the working dir name
     fs::path tempDir =  fs::temp_directory_path() /
-                        fs::path("temporary_file_workplace_" + std::to_string(std::time(nullptr)));
+                        fs::path("temporary_file_workspace_" + std::to_string(std::time(nullptr)));
     
     // create empty directory
     fs::create_directory(tempDir);
@@ -32,7 +33,7 @@ std::string TemporaryFileWorkspace::create_local_file(std::string extension)
                             fs::path("temp_file_" + std::to_string(_incrementalFileIndex++) + extension);
 
     // this creates an empty file
-    fs::resize_file(tempFilePath, 0);
+    std::ofstream(tempFilePath.string()).close();
     ++_currentFileCount;
 
     if (_currentFileCount > _maxFileCount)

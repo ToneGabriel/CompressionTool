@@ -7,21 +7,13 @@
 
 void MTFTransform::encode(const std::string& inputFilePath, const std::string& outputFilePath)
 {
-    std::list<char> alphabetList = _create_alphabet_list();
-
     std::ifstream inputFile(inputFilePath, std::ios::binary);
-    if (!inputFile.is_open())
-    {
-        std::cerr << "Error: Could not open file " << inputFilePath << std::endl;
-        return;
-    }
-
     std::ofstream outputFile(outputFilePath, std::ios::binary);
-    if (!outputFile.is_open())
-    {
-        std::cerr << "Error: Could not open file " << outputFilePath << std::endl;
-        return;
-    }
+
+    if (!inputFile.is_open() || !outputFile.is_open())
+        throw std::runtime_error("Could not open input or output files!");
+
+    std::list<char> alphabetList = _create_alphabet_list();
 
     char symbol;
     while (inputFile.read(&symbol, sizeof(symbol)))
@@ -38,28 +30,17 @@ void MTFTransform::encode(const std::string& inputFilePath, const std::string& o
         alphabetList.erase(it);
         alphabetList.push_front(symbol);
     }
-
-    inputFile.close();
-    outputFile.close();
 }
 
 void MTFTransform::decode(const std::string& inputFilePath, const std::string& outputFilePath)
 {
-    std::list<char> alphabetList = _create_alphabet_list();
-
     std::ifstream inputFile(inputFilePath, std::ios::binary);
-    if (!inputFile.is_open())
-    {
-        std::cerr << "Error: Could not open file " << inputFilePath << std::endl;
-        return;
-    }
-
     std::ofstream outputFile(outputFilePath, std::ios::binary);
-    if (!outputFile.is_open())
-    {
-        std::cerr << "Error: Could not open file " << outputFilePath << std::endl;
-        return;
-    }
+
+    if (!inputFile.is_open() || !outputFile.is_open())
+        throw std::runtime_error("Could not open input or output files!");
+
+    std::list<char> alphabetList = _create_alphabet_list();
 
     int pos;
     while (inputFile.read(reinterpret_cast<char*>(&pos), sizeof(char)))
@@ -77,9 +58,6 @@ void MTFTransform::decode(const std::string& inputFilePath, const std::string& o
         alphabetList.erase(it);
         alphabetList.push_front(symbol);
     }
-
-    inputFile.close();
-    outputFile.close();
 }
 
 std::list<char> MTFTransform::_create_alphabet_list() const

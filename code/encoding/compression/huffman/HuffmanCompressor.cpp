@@ -5,63 +5,58 @@
 
 #include <iostream>
 #include <fstream>
-#include <filesystem>
 
-namespace fs = std::filesystem;
 
 void HuffmanCompressor::encode(const std::string& inputFilePath, const std::string& outputFilePath)
 {
-    _ASSERT(fs::exists(inputFilePath), "File not found!");
+    std::ifstream inputFile(inputFilePath, std::ios::binary);
+    std::ofstream outputFile(outputFilePath, std::ios::binary);
 
+    if (!inputFile.is_open() || !outputFile.is_open())
+        throw std::runtime_error("Could not open input or output files!");
+
+    size_t                                      padding;
     _HuffmanTree                                tree;
     std::map<symbol_t, size_t>                  frequencyMap;
     std::unordered_map<symbol_t, std::string>   codeMap;
 
-    _originalFilename   = inputFilePath;
-    _compressedFilename = fs::path(inputFilePath).replace_extension(BIN_EXTENSION).string();
-
-    std::ifstream ifile(_originalFilename, std::ios::binary);
-    std::ofstream ofile(_compressedFilename, std::ios::binary);
-
     {   // compute symbol frequencies
         symbol_t symbol;
 
-        while (ifile.get(symbol))
+        while (inputFile.read(reinterpret_cast<char*>(&symbol), sizeof(symbol)))
             ++frequencyMap[symbol];
 
-        ifile.clear();              // clear error flags
-        ifile.seekg(std::ios::beg); // reset file to beginning
+        inputFile.clear();              // clear error flags
+        inputFile.seekg(std::ios::beg); // reset file to beginning
     }
 
     tree.build(frequencyMap);
     codeMap = tree.generate_huffman_codes();
+    padding = _compute_padding(frequencyMap, codeMap);
 
     {   // write metadata
 
-        // write extension
-        ofile.write(reinterpret_cast<const char*>(&_extension), sizeof(_extension));
-
         // write padding
-        ofile.write(reinterpret_cast<const char*>(&_padding), sizeof(_padding));
+        outputFile.write(reinterpret_cast<const char*>(&padding), sizeof(padding));
 
         // write frequency map and its size
         size_t mapSize = frequencyMap.size();
-        ofile.write(reinterpret_cast<const char*>(&mapSize), sizeof(mapSize));
+        outputFile.write(reinterpret_cast<const char*>(&mapSize), sizeof(mapSize));
 
         for (const auto& [symbol, count] : frequencyMap)
         {
-            ofile.write(reinterpret_cast<const char*>(&symbol), sizeof(symbol));
-            ofile.write(reinterpret_cast<const char*>(&count), sizeof(count));
+            outputFile.write(reinterpret_cast<const char*>(&symbol), sizeof(symbol));
+            outputFile.write(reinterpret_cast<const char*>(&count), sizeof(count));
         }
-    }
+    }   // END write metadata
 
     {   // encode and write file
         std::string buffer;
         symbol_t    symbol;
 
-        while (ifile.get(symbol))
+        while (inputFile.read(reinterpret_cast<char*>(&symbol), sizeof(symbol)))
         {
-            buffer.append(codeMap.at(symbol));
+            buffer.append(codeMap[symbol]);
 
             while (buffer.size() >= SYMBOL_BIT)
             {
@@ -72,63 +67,58 @@ void HuffmanCompressor::encode(const std::string& inputFilePath, const std::stri
                 buffer.erase(0, SYMBOL_BIT);
 
                 // transform bits from bitset into a symbol and write it
-                ofile.put(static_cast<symbol_t>(bits.to_ulong()));
+                symbol = static_cast<symbol_t>(bits.to_ulong());
+                outputFile.write(reinterpret_cast<const char*>(&symbol), sizeof(symbol));
             }
         }
 
         // pad leftover bits in the buffer with 0s and write them as the last byte
-        if (_padding != 0)
+        if (padding != 0)
         {
             // Pad the remaining bits to form a full byte
-            buffer.append(_padding, SYMBOL_ZERO);
+            buffer.append(padding, SYMBOL_ZERO);
             std::bitset<SYMBOL_BIT> bits(buffer);
 
-            ofile.put(static_cast<symbol_t>(bits.to_ulong()));
+            symbol = static_cast<symbol_t>(bits.to_ulong());
+            outputFile.write(reinterpret_cast<const char*>(&symbol), sizeof(symbol));
         }
         else
         {
             // do nothing - no padding needed
         }
     }   // END encode and write file
-
-    ifile.close();
-    ofile.close();
 }
 
 void HuffmanCompressor::decode(const std::string& inputFilePath, const std::string& outputFilePath)
 {
-    _ASSERT(fs::exists(inputFilePath), "File not found!");
+    std::ifstream inputFile(inputFilePath, std::ios::binary);
+    std::ofstream outputFile(outputFilePath, std::ios::binary);
 
+    if (!inputFile.is_open() || !outputFile.is_open())
+        throw std::runtime_error("Could not open input or output files!");
+
+    size_t                                      padding;
     _HuffmanTree                                tree;
     std::map<symbol_t, size_t>                  frequencyMap;
     std::unordered_map<symbol_t, std::string>   codeMap;
 
-    _originalFilename   = fs::path(inputFilePath).replace_extension(".txtd").string();
-    _compressedFilename = inputFilePath;
-
-    std::ifstream ifile(_compressedFilename, std::ios::binary);
-    std::ofstream ofile(_originalFilename, std::ios::binary);
-
     {   // read metadata
 
-        // read extension
-        ifile.read(reinterpret_cast<char*>(&_extension), sizeof(_extension));
-
         // read padding
-        ifile.read(reinterpret_cast<char*>(&_padding), sizeof(_padding));
+        inputFile.read(reinterpret_cast<char*>(&padding), sizeof(padding));
 
         // read frequency map and its size
         size_t      mapSize;
         symbol_t    symbol;
         size_t      count;
 
-        ifile.read(reinterpret_cast<char*>(&mapSize), sizeof(mapSize));
+        inputFile.read(reinterpret_cast<char*>(&mapSize), sizeof(mapSize));
 
         for (size_t i = 0; i < mapSize; ++i)
         {
 
-            ifile.read(reinterpret_cast<char*>(&symbol), sizeof(symbol));
-            ifile.read(reinterpret_cast<char*>(&count), sizeof(count));
+            inputFile.read(reinterpret_cast<char*>(&symbol), sizeof(symbol));
+            inputFile.read(reinterpret_cast<char*>(&count), sizeof(count));
 
             frequencyMap[symbol] = count;
         }
@@ -139,27 +129,52 @@ void HuffmanCompressor::decode(const std::string& inputFilePath, const std::stri
     {   // decode and write file
         std::string buffer;
         symbol_t    symbol;
+        size_t      maxLen;
 
         auto traversor = tree.traversor_begin();
 
-        while (ifile.get(symbol))
+        while (inputFile.read(reinterpret_cast<char*>(&symbol), sizeof(symbol)))
         {
             std::bitset<SYMBOL_BIT> bits(symbol);
             buffer = std::move(bits.to_string());
+            maxLen = (inputFile.peek() != EOF) ? SYMBOL_BIT : SYMBOL_BIT - padding;
 
-            for (symbol_t digit : buffer)
+            for (size_t i = 0; i < maxLen; ++i)
             {
                 if (!traversor.is_leaf())
-                    traversor += digit;
+                {
+                    traversor += buffer[i];
+                }
                 else
                 {
-                    ofile.put(traversor.get_symbol());  // write the character to the output file
-                    traversor = tree.traversor_begin(); // reset to root for next character
+                    // write the character to the output file
+                    symbol = traversor.get_symbol();
+                    outputFile.write(reinterpret_cast<const char*>(&symbol), sizeof(symbol));
+
+                    // reset to root for next character
+                    traversor = tree.traversor_begin();
                 }
             }
         }
     }   // END decode and write file
+}
 
-    ifile.close();
-    ofile.close();
+size_t HuffmanCompressor::_compute_padding( const std::map<symbol_t, size_t>& frequencyMap,
+                                            const std::unordered_map<symbol_t, std::string>& codeMap)
+{
+    size_t ret;
+    size_t totalCompressedBits  = 0;
+    symbol_t leftoverBits       = 0;
+
+    for (auto& [symbol, count] : frequencyMap)
+        totalCompressedBits += (count * codeMap.at(symbol).size());
+
+    leftoverBits = totalCompressedBits % SYMBOL_BIT;
+
+    if (leftoverBits == 0)
+        ret = 0;
+    else
+        ret = SYMBOL_BIT - leftoverBits;
+
+    return ret;
 }

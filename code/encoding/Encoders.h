@@ -26,8 +26,8 @@ private:
 
 public:
 
-    BasicEncoder(EEncoderType type = EEncoderType::e_DEFAULT)
-        : _currentEncoderType(type) { /*Empty */ }
+    BasicEncoder()
+        : _currentEncoderType(EEncoderType::e_DEFAULT) { /*Empty */ }
 
     ~BasicEncoder() = default;
 
@@ -68,9 +68,4 @@ public:
 
     void encode(const std::string& inputFilePath, const std::string& outputFilePath);
     void decode(const std::string& inputFilePath, const std::string& outputFilePath);
-
-private:
-
-    std::string _get_encode_file_path(const std::string& path) const;
-    std::string _get_decode_file_path(const std::string& path) const;
 };   // END SequentialEncoder
