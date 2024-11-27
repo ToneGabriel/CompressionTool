@@ -141,18 +141,20 @@ void HuffmanCompressor::decode(const std::string& inputFilePath, const std::stri
 
             for (size_t i = 0; i < maxLen; ++i)
             {
-                if (!traversor.is_leaf())
+                traversor += buffer[i];
+
+                if (traversor.is_leaf())
                 {
-                    traversor += buffer[i];
-                }
-                else
-                {
-                    // write the character to the output file
+                    // write the symbol to the output file
                     symbol = traversor.get_symbol();
                     outputFile.write(reinterpret_cast<const char*>(&symbol), sizeof(symbol));
 
-                    // reset to root for next character
+                    // reset to root for next symbol
                     traversor = tree.traversor_begin();
+                }
+                else
+                {
+                    // do nothing - wait for leaf
                 }
             }
         }
