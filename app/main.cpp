@@ -1,9 +1,7 @@
 #include <iostream>
 
-#include "../code/encoding/Encoders.h"
-
-// C:\\Personal\\C++\\CompressionTool
-// H:\\Programare\\C++\\CompressionTool
+#include "../code/encode/Encoders.h"
+// #include "../code/archive/Archive.h"
 
 // #define MAIN_ARG_COUNT      5
 // #define C_FLAG              "-c"
@@ -19,20 +17,22 @@
 
 int main(int argc, char** args)
 {
-    SequentialEncoder seqEncoder;
-
     // Paths for input/output files
-    std::string inputFilePath   = "H:\\Programare\\C++\\CompressionTool\\input.txt";
-    std::string encodedFilePath = "H:\\Programare\\C++\\CompressionTool\\encoded.bin";
-    std::string decodedFilePath = "H:\\Programare\\C++\\CompressionTool\\decoded.txt";
+    std::string inputFilePath   = std::string(PROJECT_ROOT_PATH) + "/input.txt";
+    std::string encodedFilePath = std::string(PROJECT_ROOT_PATH) + "/encoded.txt";
+    std::string decodedFilePath = std::string(PROJECT_ROOT_PATH) + "/decoded.txt";
+
+    SequentialEncoder seqEncoder;
 
     // Encode the file
     seqEncoder.add_to_sequence(EEncoderType::e_LZ77);
+    seqEncoder.add_to_sequence(EEncoderType::e_HUFFMAN);
     seqEncoder.encode(inputFilePath, encodedFilePath);
     seqEncoder.clear_sequence();
     std::cout << "Encoding complete." << std::endl;
 
     // Decode the file
+    seqEncoder.add_to_sequence(EEncoderType::e_HUFFMAN);
     seqEncoder.add_to_sequence(EEncoderType::e_LZ77);
     seqEncoder.decode(encodedFilePath, decodedFilePath);
     seqEncoder.clear_sequence();

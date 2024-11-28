@@ -32,14 +32,18 @@ std::string TemporaryFileWorkspace::create_local_file(std::string extension)
     fs::path tempFilePath = fs::path(_directoryName) /
                             fs::path("temp_file_" + std::to_string(_incrementalFileIndex++) + extension);
 
-    // this creates an empty file
-    std::ofstream(tempFilePath.string()).close();
-    ++_currentFileCount;
+    std::string tempFilePathAsString = tempFilePath.string();
 
+    // create empty file
+    _fileSet.emplace(tempFilePathAsString);
+    ++_currentFileCount;
+    std::ofstream(tempFilePathAsString).close();
+
+    // remove oldest file when capacity is exceeded
     if (_currentFileCount > _maxFileCount)
         remove_first_local_file();
 
-    return tempFilePath.string();
+    return tempFilePathAsString;
 }
 
 void TemporaryFileWorkspace::remove_first_local_file()
@@ -48,9 +52,10 @@ void TemporaryFileWorkspace::remove_first_local_file()
     {
         auto first = _fileSet.begin();
 
-        fs::remove(*first);
         _fileSet.erase(first);
         --_currentFileCount;
+
+        fs::remove(*first);
     }
 }
 
@@ -63,17 +68,25 @@ void TemporaryFileWorkspace::remove_local_file(const std::string& localfile)
     {
         auto it = _fileSet.find(tempFilePath.string());
 
-        fs::remove(*it);
         _fileSet.erase(it);
         --_currentFileCount;
+
+        fs::remove(*it);
     }
 }
 
 void TemporaryFileWorkspace::move_local_file(const std::string& localfile, const std::string& newPath)
 {
-    // TODO: implement
     fs::path tempFilePath = fs::path(_directoryName) /
                             fs::path(localfile);
 
-    fs::rename(tempFilePath, newPath);
+    if (fs::exists(tempFilePath))
+    {
+        auto it = _fileSet.find(tempFilePath.string());
+
+        _fileSet.erase(it);
+        --_currentFileCount;
+
+        fs::rename(tempFilePath, newPath);
+    }
 }

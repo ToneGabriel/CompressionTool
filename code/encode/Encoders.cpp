@@ -1,7 +1,7 @@
 #include "Encoders.h"
 
-#include "compression/huffman/HuffmanCompressor.h"
-#include "compression/lz77/LZ77Compressor.h"
+#include "compress/huffman/HuffmanCompressor.h"
+#include "compress/lz77/LZ77Compressor.h"
 
 #include "transform/bwt/BWTransform.h"
 #include "transform/mtf/MTFTransform.h"
