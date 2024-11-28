@@ -1,12 +1,17 @@
 #pragma once
 
-#include <list>
-
 #include "IEncoder.h"
+
+#include <list>
 
 
 class MTFTransform : public IEncoder    // Move-to-front encoding
 {
+public:
+
+    MTFTransform() = default;
+    ~MTFTransform() = default;
+
 public:
 
     void encode(const std::string& inputFilePath, const std::string& outputFilePath) override;

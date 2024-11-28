@@ -23,6 +23,11 @@ private:
 
 public:
 
+    LZ77Compressor() = default;
+    ~LZ77Compressor() = default;
+
+public:
+
     void encode(const std::string& inputFilePath, const std::string& outputFilePath) override;
     void decode(const std::string& inputFilePath, const std::string& outputFilePath) override;
 };  // END LZ77Compressor

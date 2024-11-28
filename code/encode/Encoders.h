@@ -54,11 +54,11 @@ private:
 
 public:
 
-    SequentialEncoder()     = default;
-    ~SequentialEncoder()    = default;
+    SequentialEncoder() = default;
+    ~SequentialEncoder() = default;
 
-    SequentialEncoder(const SequentialEncoder&)             = default;
-    SequentialEncoder& operator=(const SequentialEncoder&)  = default;
+    SequentialEncoder(const SequentialEncoder&) = default;
+    SequentialEncoder& operator=(const SequentialEncoder&) = default;
 
 public:
 

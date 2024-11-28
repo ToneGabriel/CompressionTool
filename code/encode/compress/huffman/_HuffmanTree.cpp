@@ -68,13 +68,23 @@ _HuffmanTree::_HuffmanTree(_HuffmanTree&& other) noexcept
 
 _HuffmanTree& _HuffmanTree::operator=(const _HuffmanTree& other)
 {
-    // TODO: implement
+    if (_root != other._root)
+    {
+        clear();
+        _copy_tree(other);
+    }
+
     return *this;
 }
 
 _HuffmanTree& _HuffmanTree::operator=(_HuffmanTree&& other) noexcept
 {
-    // TODO: implement
+    if (_root != other._root)
+    {
+        clear();
+        _move_tree(std::move(other));
+    }
+
     return *this;
 }
 
@@ -151,18 +161,31 @@ bool _HuffmanTree::empty() const
 
 void _HuffmanTree::_copy_tree(const _HuffmanTree& other)
 {
-    // TODO: implement
+    _root = _copy_tree_impl(other._root);
 }
 
 void _HuffmanTree::_move_tree(_HuffmanTree&& other) noexcept
 {
-    // TODO: implement
+    std::swap(_root, other._root);
 }
 
 void _HuffmanTree::_check_tree() const
 {
     if (empty())
         throw std::logic_error("Tree not built!");
+}
+
+_HuffmanNode* _HuffmanTree::_copy_tree_impl(const _HuffmanNode* const subroot)
+{
+    if (subroot == nullptr)
+        return nullptr;
+
+    _HuffmanNode* newNode = new _HuffmanNode(subroot->_Symbol, subroot->_Frequency);
+
+    newNode->_Left  = _copy_tree_impl(subroot->_Left);
+    newNode->_Right = _copy_tree_impl(subroot->_Right);
+
+    return newNode;
 }
 
 void _HuffmanTree::_clear_tree_impl(_HuffmanNode* subroot)
@@ -178,7 +201,7 @@ void _HuffmanTree::_clear_tree_impl(_HuffmanNode* subroot)
 
 void _HuffmanTree::_print_tree_impl(const size_t ident,
                                     const _HuffmanNode* const subroot,
-                                    const std::string& property) const
+                                    const std::string& property)
 {
     if (subroot != nullptr)
         std::cout   << std::string("").append(ident, '\t')
@@ -194,7 +217,7 @@ void _HuffmanTree::_print_tree_impl(const size_t ident,
 
 void _HuffmanTree::_generate_huffman_codes_impl(const _HuffmanNode* const subroot,
                                                 const std::string& code,
-                                                std::unordered_map<symbol_t, std::string>& codes) const
+                                                std::unordered_map<symbol_t, std::string>& codes)
 {
     if (subroot == nullptr)
         return;

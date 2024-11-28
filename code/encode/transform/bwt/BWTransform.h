@@ -5,6 +5,10 @@
 
 class BWTransform : public IEncoder    // Burrows-Wheeler Transform
 {
+public:
+
+    BWTransform() = default;
+    ~BWTransform() = default;
 
 public:
 

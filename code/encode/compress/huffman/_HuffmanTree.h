@@ -10,14 +10,16 @@
 
 class _HuffmanTreeTraversor
 {
-private:
+// Iterator pattern
+// Traverse tree from root by going left or right until a leaf is found
 
+private:
     _HuffmanNode* _current = nullptr;
 
 public:
 
-    _HuffmanTreeTraversor()     = default;
-    ~_HuffmanTreeTraversor()    = default;
+    _HuffmanTreeTraversor() = default;
+    ~_HuffmanTreeTraversor() = default;
 
     _HuffmanTreeTraversor(_HuffmanNode* node);
 
@@ -34,7 +36,6 @@ public:
 class _HuffmanTree
 {
 private:
-
     _HuffmanNode* _root = nullptr;
 
 public:
@@ -63,13 +64,16 @@ private:
 
     void _copy_tree(const _HuffmanTree& other);
     void _move_tree(_HuffmanTree&& other) noexcept;
-
     void _check_tree() const;
-    void _clear_tree_impl(_HuffmanNode* subroot);
-    void _print_tree_impl(  const size_t ident,
-                            const _HuffmanNode* const subroot,
-                            const std::string& property) const;
-    void _generate_huffman_codes_impl(  const _HuffmanNode* const subroot,
-                                        const std::string& code,
-                                        std::unordered_map<symbol_t, std::string>& codes) const;
+
+private:
+
+    static _HuffmanNode* _copy_tree_impl(const _HuffmanNode* const subroot);
+    static void _clear_tree_impl(_HuffmanNode* subroot);
+    static void _print_tree_impl(   const size_t ident,
+                                    const _HuffmanNode* const subroot,
+                                    const std::string& property);
+    static void _generate_huffman_codes_impl(   const _HuffmanNode* const subroot,
+                                                const std::string& code,
+                                                std::unordered_map<symbol_t, std::string>& codes);
 };  // END _HuffmanTree
