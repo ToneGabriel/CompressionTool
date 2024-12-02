@@ -18,8 +18,8 @@ private:
 
 private:
 
-    static const int WINDOW_SIZE    = 4096; // Size of the search buffer (sliding window)
-    static const int LOOKAHEAD_SIZE = 1024; // Size of the lookahead buffer
+    static const int WINDOW_SIZE    = 16 * 1024;    // 16KB - Size of the search buffer (sliding window)
+    static const int LOOKAHEAD_SIZE = 4 * 1024;     // 4KB - Size of the lookahead buffer
 
 public:
 
