@@ -19,12 +19,17 @@ void MTFTransform::encode(const std::string& inputFilePath, const std::string& o
     while (inputFile.read(&symbol, sizeof(symbol)))
     {
         // Find the symbol and calculate the position in one loop
-        int pos = 0;
+        unsigned char pos = 0;
         auto it = alphabetList.begin();
         auto end = alphabetList.end();
-        for (/*empty*/; it != end && *it != symbol; ++it, ++pos) { /* do nothing */ }
+        while (it != end && *it != symbol)
+        {
+            ++it;
+            ++pos;
+        }
 
-        outputFile.write(reinterpret_cast<const char*>(&pos), sizeof(char));    // pos will be 0-255 so its ok to write only 1 byte
+        // pos will be 0-255 so its ok to write only 1 byte
+        outputFile.write(reinterpret_cast<const char*>(&pos), sizeof(pos));
 
         // Move the symbol to the front
         alphabetList.erase(it);
@@ -42,8 +47,8 @@ void MTFTransform::decode(const std::string& inputFilePath, const std::string& o
 
     std::list<char> alphabetList = _create_alphabet_list();
 
-    int pos;
-    while (inputFile.read(reinterpret_cast<char*>(&pos), sizeof(char)))
+    unsigned char pos;
+    while (inputFile.read(reinterpret_cast<char*>(&pos), sizeof(pos)))
     {
         // Find the symbol at the given position
         auto it = alphabetList.begin();
@@ -64,9 +69,9 @@ std::list<char> MTFTransform::_create_alphabet_list() const
 {
     std::list<char> ret;
 
-    // Initialize positions list to hold symbols 0-255
-    for (int i = 0; i < 256; ++i)
-        ret.push_back(static_cast<char>(i));
+    // Initialize positions list to hold all symbols in order
+    for (char c = CHAR_MIN; c < CHAR_MAX; ++c)
+        ret.push_back(c);
 
     return ret;
 }

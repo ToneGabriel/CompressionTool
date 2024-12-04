@@ -27,26 +27,35 @@ void LZ77Compressor::encode(const std::string& inputFilePath, const std::string&
     {
         _LZ77Match match {0, 0, 0};
 
-        // Search for the longest match in the search buffer
-        for (int i = 0; i < searchBuffer.size(); ++i)
-        {
-            int matchLength = 0;
-            while ( matchLength < lookaheadBuffer.size() &&
-                    i + matchLength < searchBuffer.size() &&
-                    searchBuffer[i + matchLength] == lookaheadBuffer[matchLength])
+        {   // Search for the longest match in the search buffer
+            int searchBufferSize    = searchBuffer.size();
+            int lookaheadBufferSize = lookaheadBuffer.size();
+            int matchLength;
+
+            for (int i = 0; i < searchBufferSize; ++i)
             {
-                ++matchLength;
+                matchLength = 0;
+                while ( matchLength < lookaheadBufferSize &&
+                        i + matchLength < searchBufferSize &&
+                        searchBuffer[i + matchLength] == lookaheadBuffer[matchLength])
+                {
+                    ++matchLength;
+                }
+
+                if (matchLength > match._Length)
+                {
+                    match._Offset = searchBufferSize - i;
+                    match._Length = matchLength;
+                }
             }
 
-            if (matchLength > match._Length)
+            if (match._Length < lookaheadBufferSize)
+                match._NextChar = lookaheadBuffer[match._Length];
+            else
             {
-                match._Offset = searchBuffer.size() - i;
-                match._Length = matchLength;
-            }
-        }
-
-        if (match._Length < lookaheadBuffer.size())
-            match._NextChar = lookaheadBuffer[match._Length]; // else _NextChar is 0
+                // do nothing - _NextChar remains 0
+            }   
+        }   // END - Search for the longest match in the search buffer
 
         // Write match
         outputFile.write(reinterpret_cast<const char*>(&match._Offset), sizeof(match._Offset));
@@ -88,7 +97,7 @@ void LZ77Compressor::decode(const std::string& inputFilePath, const std::string&
             inputFile.read(reinterpret_cast<char*>(&match._Length), sizeof(match._Length)) &&
             inputFile.read(reinterpret_cast<char*>(&match._NextChar), sizeof(match._NextChar)))
     {
-        // Write the match from the history (search buffer) directly to the output file
+        // Write the match from the history (decompressed buffer) directly to the output file
         if (match._Offset > 0 && match._Length > 0)
         {
             char c;
