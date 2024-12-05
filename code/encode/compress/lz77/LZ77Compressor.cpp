@@ -25,7 +25,7 @@ void LZ77Compressor::encode(const std::string& inputFilePath, const std::string&
 
     while (!lookaheadBuffer.empty())
     {
-        _LZ77Match match {0, 0, 0};
+        _LZ77Match match {0, 0, 0, false};
 
         {   // Search for the longest match in the search buffer
             int searchBufferSize    = searchBuffer.size();
@@ -50,10 +50,15 @@ void LZ77Compressor::encode(const std::string& inputFilePath, const std::string&
             }
 
             if (match._Length < lookaheadBufferSize)
-                match._NextChar = lookaheadBuffer[match._Length];
+            {
+                match._NextChar     = lookaheadBuffer[match._Length];
+                match._HasNextChar  = true;
+            }
             else
             {
-                // do nothing - _NextChar remains 0
+                // do nothing
+                // match._NextChar = 0;
+                // match._HasNextChar = false;
             }   
         }   // END - Search for the longest match in the search buffer
 
@@ -61,13 +66,15 @@ void LZ77Compressor::encode(const std::string& inputFilePath, const std::string&
         outputFile.write(reinterpret_cast<const char*>(&match._Offset), sizeof(match._Offset));
         outputFile.write(reinterpret_cast<const char*>(&match._Length), sizeof(match._Length));
         outputFile.write(reinterpret_cast<const char*>(&match._NextChar), sizeof(match._NextChar));
+        outputFile.write(reinterpret_cast<const char*>(&match._HasNextChar), sizeof(match._HasNextChar));
 
         // Slide the window
         int shiftSize = match._Length + 1;
         for (int i = 0; i < shiftSize && !lookaheadBuffer.empty(); ++i)
         {
+            // Maintain window size
             if (searchBuffer.size() >= WINDOW_SIZE)
-                searchBuffer.pop_front(); // Maintain window size
+                searchBuffer.pop_front();
 
             searchBuffer.push_back(lookaheadBuffer.front());
             lookaheadBuffer.pop_front();
@@ -95,7 +102,8 @@ void LZ77Compressor::decode(const std::string& inputFilePath, const std::string&
 
     while ( inputFile.read(reinterpret_cast<char*>(&match._Offset), sizeof(match._Offset)) &&
             inputFile.read(reinterpret_cast<char*>(&match._Length), sizeof(match._Length)) &&
-            inputFile.read(reinterpret_cast<char*>(&match._NextChar), sizeof(match._NextChar)))
+            inputFile.read(reinterpret_cast<char*>(&match._NextChar), sizeof(match._NextChar)) &&
+            inputFile.read(reinterpret_cast<char*>(&match._HasNextChar), sizeof(match._HasNextChar)))
     {
         // Write the match from the history (decompressed buffer) directly to the output file
         if (match._Offset > 0 && match._Length > 0)
@@ -111,10 +119,14 @@ void LZ77Compressor::decode(const std::string& inputFilePath, const std::string&
         }
 
         // Write the next literal character directly to the output file
-        if (match._NextChar != 0)
+        if (match._HasNextChar)
         {
             outputFile.write(&match._NextChar, sizeof(match._NextChar));
             decompressedBuffer.push_back(match._NextChar);  // Add to the search buffer
+        }
+        else
+        {
+            // do nothing - no next char
         }
 
         // Maintain a maximum buffer size to simulate the sliding window

@@ -65,7 +65,7 @@ void MTFTransform::decode(const std::string& inputFilePath, const std::string& o
     }
 }
 
-std::list<char> MTFTransform::_create_alphabet_list() const
+std::list<char> MTFTransform::_create_alphabet_list()
 {
     std::list<char> ret;
 

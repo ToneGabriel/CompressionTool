@@ -19,5 +19,5 @@ public:
 
 private:
 
-    std::list<char> _create_alphabet_list() const;
+    static std::list<char> _create_alphabet_list();
 };  // END MTFTransform

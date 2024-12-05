@@ -14,6 +14,7 @@ private:
         int _Offset;
         int _Length;
         char _NextChar;
+        bool _HasNextChar;
     };  // END _LZ77Match
 
 private:
