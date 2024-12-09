@@ -6,6 +6,7 @@
 #include <atomic>
 #include <queue>
 #include <string>
+#include <unordered_map>
 #include <functional>
 
 #include "_Core.h"
@@ -28,14 +29,14 @@ using _EnableJobsFromContainer_t =
             bool>;
 
 
-template<size_t NThread = 2>
 class ThreadPool
 {
 private:
-    std::queue<std::function<void(void)>>   _jobs;
-    std::thread                             _workerThreads[NThread];
-    std::mutex                              _poolMtx;
-    std::condition_variable                 _poolCV;
+    std::queue<std::function<void(void)>>               _jobs;
+    std::unordered_map<std::thread::id, std::thread>    _workerThreads;
+    std::mutex                                          _poolMtx;
+    std::condition_variable                             _poolCV;
+
     std::atomic_size_t                      _jobsDone;
     bool                                    _shutdown;
 
@@ -50,6 +51,11 @@ public:
         _open_pool();
     }
 
+    ThreadPool(const size_t nthreads)
+    {
+        _open_pool(nthreads);
+    }
+
     ~ThreadPool()
     {
         _close_pool();
@@ -60,6 +66,11 @@ public:
 
 public:
     // Main functions
+
+    size_t size() const
+    {
+        return _workerThreads.size();
+    }
 
     void do_job(std::function<void()>&& newJob)
     {
@@ -74,19 +85,13 @@ public:
     void do_more_jobs(JobContainer&& newJobs)
     {
         // Move multiple jobs on the queue and unblock necessary threads
-
         std::unique_lock<std::mutex> lock(_poolMtx);
 
-        // Save added size
-        const size_t addedSize = newJobs.size();
-
-        // Move jobs from container and clear it
         for (auto&& job : newJobs)
+        {
             _jobs.emplace(std::move(job));
-
-        // Notify waiting threads
-        for (size_t i = 0; i < addedSize; ++i)
             _poolCV.notify_one();
+        }
     }
 
     size_t jobs_done() const
@@ -97,14 +102,17 @@ public:
 private:
     // Helpers
 
-    void _open_pool()
+    void _open_pool(const size_t nthreads = 2)
     {
         _jobsDone       = 0;
         _shutdown       = false;
 
         // Create the specified number of threads
-        for (auto& t : _workerThreads)
-            t = std::thread(std::bind(&ThreadPool::_worker_thread, this));
+        for (size_t i = 0; i < nthreads; ++i)
+        {
+            std::thread t = std::thread(std::bind(&ThreadPool::_worker_thread, this));
+            _workerThreads.emplace(t.get_id(), std::move(t));
+        }
     }
 
     void _close_pool()
@@ -118,7 +126,7 @@ private:
         }   // empty scope end -> unlock
 
         // Threads will exit the loop and will join here
-        for (auto& t : _workerThreads)
+        for (auto& [id, t] : _workerThreads)
             t.join();
 
         // Print errors last
@@ -139,7 +147,8 @@ private:
                 std::unique_lock<std::mutex> lock(_poolMtx);
 
                 // If the pool is still working, but there are no jobs -> wait
-                if (!_shutdown && _jobs.empty())
+                // Safeguard against spurious wakeups
+                while (!_shutdown && _jobs.empty())
                     _poolCV.wait(lock);
 
                 // True only when the pool is closed -> exit loop and this thread is joined
