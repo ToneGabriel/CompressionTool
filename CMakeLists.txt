@@ -6,10 +6,6 @@ project(
 )
 
 # Languages
-set(CMAKE_C_STANDARD            17)
-set(CMAKE_C_STANDARD_REQUIRED   ON)
-set(CMAKE_C_EXTENSIONS          OFF)
-
 set(CMAKE_CXX_STANDARD          20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS        OFF)
@@ -20,8 +16,8 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 
 # Names
-set(PROJECT_LIBRARY_NAME    "CompressionToolLibrary")
-set(PROJECT_EXECUTABLE_NAME "CompressionTool")
+set(PROJECT_LIBRARY_NAME    "_compression_tool")
+set(PROJECT_EXECUTABLE_NAME "compression_tool")
 
 # Create project library (link executable and other cpp files to this)
 add_library(${PROJECT_LIBRARY_NAME} STATIC)
@@ -42,7 +38,7 @@ install(TARGETS ${PROJECT_LIBRARY_NAME}
 install(TARGETS ${PROJECT_EXECUTABLE_NAME} DESTINATION bin)
 
 # CPack settings
-set(CPACK_GENERATOR "NSIS;ZIP")
+set(CPACK_GENERATOR "NSIS")
 set(CPACK_PACKAGE_NAME ${PROJECT_NAME})
 set(CPACK_PACKAGE_VERSION ${PROJECT_VERSION})
 include(CPack)
