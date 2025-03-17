@@ -4,74 +4,104 @@
 #include <cstring>
 
 
-class Buffered_File_Reader
+class BufferedFileReader
 {
 private:
-    static constexpr size_t _BUFFER_SIZE = 1024 * 1024; // 1 MB
+    static constexpr size_t _s_BUFFER_SIZE = 1024 * 1024; // 1 MB
 
-    char _buffer[_BUFFER_SIZE]; // Fixed-size buffer
+    char _buffer[_s_BUFFER_SIZE];
+    size_t _buffer_pos = 0;
+    size_t _buffer_end = 0;
+
+    std::string _input_file_path;
     std::ifstream _input_file_stream;
-    size_t _buffer_pos = 0; // Current read position
-    size_t _buffer_end = 0; // End index of valid data in buffer
 
 public:
 
-    explicit Buffered_File_Reader(const std::string& filename)
+    explicit BufferedFileReader(const std::string& file)
+        : _input_file_path(file)
     {
-        _input_file_stream.open(filename, std::ios::binary);
+        Open();
+    }
 
+    ~BufferedFileReader()
+    {
+        Close();
+    }
+
+public:
+
+    size_t GetMaxReadCount() const
+    {
+        return _s_BUFFER_SIZE;
+    }
+
+    bool Open()
+    {
         if (!_input_file_stream.is_open())
-            throw std::runtime_error("Failed to open file: " + filename);
-    }
-
-    ~Buffered_File_Reader() = default;
-
-public:
-
-    size_t Get_Max_Read_Count() const
-    {
-        return _BUFFER_SIZE;
-    }
-
-    template<class Container>
-    void Read(size_t nchar, Container& output_container)
-    {
-        _Refill_Buffer_If_Need(nchar);
-
-        if (_Buffer_Current_Size())
         {
-            size_t to_read = (std::min)(nchar, _Buffer_Current_Size());
-    
-            output_container.insert(output_container.end(),
-                                    _buffer + _buffer_pos,
-                                    _buffer + _buffer_pos + to_read);
-    
-            _buffer_pos += to_read;
+            _input_file_stream.open(_input_file_path, std::ios::binary);
+
+            if (!_input_file_stream.is_open())
+                throw std::runtime_error("Failed to open file: " + _input_file_path);
         }
         else
         {
-            // do nothing - buffer is empty and eof is reached
+            // do nothing - file is open
         }
+    }
+
+    void Close()
+    {
+        if (_input_file_stream.is_open())
+        {
+            _input_file_stream.close();
+
+            if (_input_file_stream.is_open())
+                throw std::runtime_error("Failed to close file: " + _input_file_path);
+        }
+        else
+        {
+            // do nothing - file is closed
+        }
+    }
+
+    template<class Container>
+    bool Read(size_t nchar, Container& output_container)
+    {
+        _RefillBufferIfNeed(nchar);
+
+        size_t to_read = (std::min)(nchar, _GetBufferCurrentSize());
+
+        if (to_read)
+        {
+            output_container.insert(output_container.end(),
+                                    _buffer + _buffer_pos,
+                                    _buffer + _buffer_pos + to_read);
+            _buffer_pos += to_read;
+        }
+
+        return to_read; // > 0
     }
 
     bool EoF() const
     {
-        return _Buffer_Current_Size() == 0 && _input_file_stream.eof();
+        return _GetBufferCurrentSize() == 0 && _input_file_stream.eof();
     }
 
 private:
 
-    size_t _Buffer_Current_Size() const
+    size_t _GetBufferCurrentSize() const
     {
         return _buffer_end - _buffer_pos;
     }
 
-    void _Refill_Buffer_If_Need(size_t next_read_size)  // refill may NOT reach the desired size
+    void _RefillBufferIfNeed(size_t next_read_size)  // refill may NOT reach the desired size
     {
-        if (next_read_size > _BUFFER_SIZE)
+        if (next_read_size > _s_BUFFER_SIZE)
             throw std::out_of_range("Read request exceeds buffer size");
 
-        size_t remaining = _Buffer_Current_Size();
+        size_t remaining = _GetBufferCurrentSize();
 
         if (remaining < next_read_size)
         {
@@ -79,7 +109,7 @@ private:
             std::memmove(_buffer, _buffer + _buffer_pos, remaining);
 
             // Read new data
-            _input_file_stream.read(_buffer + remaining, _BUFFER_SIZE - remaining);
+            _input_file_stream.read(_buffer + remaining, _s_BUFFER_SIZE - remaining);
 
             // Update buffer indices
             _buffer_pos = 0;
@@ -90,4 +120,4 @@ private:
             // do nothing - no need to refill
         }
     }
-}; // END Buffered_File_Reader
+}; // END BufferedFileReader

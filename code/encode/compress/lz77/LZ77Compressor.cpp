@@ -7,7 +7,7 @@
 #include <deque>
 
 
-void LZ77Compressor::encode(const std::string& inputFilePath, const std::string& outputFilePath)
+void LZ77Compressor::_Encode(const std::string& inputFilePath, const std::string& outputFilePath)
 {
     std::ifstream inputFile(inputFilePath, std::ios::binary);
     std::ofstream outputFile(outputFilePath, std::ios::binary);
@@ -89,7 +89,7 @@ void LZ77Compressor::encode(const std::string& inputFilePath, const std::string&
     }
 }
 
-void LZ77Compressor::decode(const std::string& inputFilePath, const std::string& outputFilePath)
+void LZ77Compressor::_Decode(const std::string& inputFilePath, const std::string& outputFilePath)
 {
     std::ifstream inputFile(inputFilePath, std::ios::binary);
     std::ofstream outputFile(outputFilePath, std::ios::binary);

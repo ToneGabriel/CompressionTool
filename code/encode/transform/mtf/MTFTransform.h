@@ -12,12 +12,10 @@ public:
     MTFTransform() = default;
     ~MTFTransform() = default;
 
-public:
-
-    void encode(const std::string& inputFilePath, const std::string& outputFilePath) override;
-    void decode(const std::string& inputFilePath, const std::string& outputFilePath) override;
-
 private:
+
+    void _Encode(const std::string& inputFilePath, const std::string& outputFilePath) override;
+    void _Decode(const std::string& inputFilePath, const std::string& outputFilePath) override;
 
     static std::list<char> _create_alphabet_list();
 };  // END MTFTransform

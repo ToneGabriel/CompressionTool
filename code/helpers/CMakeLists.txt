@@ -2,4 +2,5 @@
 target_include_directories(${PROJECT_LIBRARY_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_sources(${PROJECT_LIBRARY_NAME} PUBLIC
     TemporaryFileWorkspace.cpp
+    BufferedFileReader.cpp
 )

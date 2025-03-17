@@ -8,29 +8,8 @@
 
 #include "../helpers/TemporaryFileWorkspace.h"
 
-
-// BasicEncoder =====================================================
-void BasicEncoder::set_type(EEncoderType type)
-{
-    _currentEncoderType = type;
-}
-
-EEncoderType BasicEncoder::get_type() const
-{
-    return _currentEncoderType;
-}
-
-void BasicEncoder::encode(const std::string& inputFilePath, const std::string& outputFilePath)
-{
-    _get_encoder(_currentEncoderType)->encode(inputFilePath, outputFilePath);
-}
-
-void BasicEncoder::decode(const std::string& inputFilePath, const std::string& outputFilePath)
-{
-    _get_encoder(_currentEncoderType)->decode(inputFilePath, outputFilePath);
-}
-
-std::unique_ptr<IEncoder> BasicEncoder::_get_encoder(EEncoderType type)
+// SequentialEncoder =====================================================
+std::unique_ptr<IEncoder> SequentialEncoder::_GetEncoder(EEncoderType type)
 {
     switch (type)
     {
@@ -55,84 +34,42 @@ std::unique_ptr<IEncoder> BasicEncoder::_get_encoder(EEncoderType type)
     }
 }
 
-
-// SequentialEncoder =====================================================
-void SequentialEncoder::add_to_sequence(EEncoderType type)
+void SequentialEncoder::AddToSequence(EEncoderType type)
 {
-    _encodeSequence.push_back(type);
+    _encoderTypeSequence.push_back(type);
 }
 
-void SequentialEncoder::clear_sequence()
+void SequentialEncoder::ClearSequence()
 {
-    _encodeSequence.clear();
+    _encoderTypeSequence.clear();
 }
 
-bool SequentialEncoder::empty_sequence() const
+bool SequentialEncoder::EmptySequence() const
 {
-    return _encodeSequence.empty();
+    return _encoderTypeSequence.empty();
 }
 
-void SequentialEncoder::encode(const std::string& inputFilePath, const std::string& outputFilePath)
+void SequentialEncoder::Process(EEncodingDirection direction,
+                                const std::string& inputFilePath,
+                                const std::string& outputFilePath)
 {
-    _ASSERT(!empty_sequence(), "Empty sequence!");
+    _ASSERT(!EmptySequence(), "Empty sequence!");
 
     try
     {
         // Create a dedicated working folder in the temporary directory (gets deleted automatically)
         TemporaryFileWorkspace tempWorkspace(2);
 
-        // Encoder to do the work
-        BasicEncoder encoder;
-
         std::string currentInputFile = inputFilePath;
         std::string currentOutputFile;
 
-        for (EEncoderType type : _encodeSequence)
+        for (EEncoderType type : _encoderTypeSequence)
         {
             // Generate a temporary output file path
             currentOutputFile = tempWorkspace.create_local_file();
 
             // Encode
-            encoder.set_type(type);
-            encoder.encode(currentInputFile, currentOutputFile);
-
-            // Update the input file for the next step
-            currentInputFile = currentOutputFile;
-        }
-
-        // Move the last encoded file to the final name
-        tempWorkspace.move_local_file(currentInputFile, outputFilePath);
-    }
-    catch(const std::exception& e)
-    {
-        std::cerr << e.what() << '\n';
-        RERAISE;
-    }
-}
-
-void SequentialEncoder::decode(const std::string& inputFilePath, const std::string& outputFilePath)
-{
-    _ASSERT(!empty_sequence(), "Empty sequence!");
-
-    try
-    {
-        // Create a dedicated working folder in the temporary directory (gets deleted automatically)
-        TemporaryFileWorkspace tempWorkspace(2);
-
-        // Encoder to do the work
-        BasicEncoder encoder;
-
-        std::string currentInputFile = inputFilePath;
-        std::string currentOutputFile;
-
-        for (EEncoderType type : _encodeSequence)
-        {
-            // Generate a temporary output file path
-            currentOutputFile = tempWorkspace.create_local_file();
-
-            // Decode
-            encoder.set_type(type);
-            encoder.decode(currentInputFile, currentOutputFile);
+            _GetEncoder(type)->Process(direction, currentInputFile, currentOutputFile);
 
             // Update the input file for the next step
             currentInputFile = currentOutputFile;

@@ -25,17 +25,17 @@ int main(int argc, char** args)
     SequentialEncoder seqEncoder;
 
     // Encode the file
-    seqEncoder.add_to_sequence(EEncoderType::e_LZ77);
-    seqEncoder.add_to_sequence(EEncoderType::e_HUFFMAN);
-    seqEncoder.encode(inputFilePath, encodedFilePath);
-    seqEncoder.clear_sequence();
+    seqEncoder.AddToSequence(EEncoderType::e_LZ77);
+    seqEncoder.AddToSequence(EEncoderType::e_HUFFMAN);
+    seqEncoder.Process(EEncodingDirection::e_FORWARD, inputFilePath, encodedFilePath);
+    seqEncoder.ClearSequence();
     std::cout << "Encoding complete." << std::endl;
 
     // Decode the file
-    seqEncoder.add_to_sequence(EEncoderType::e_HUFFMAN);
-    seqEncoder.add_to_sequence(EEncoderType::e_LZ77);
-    seqEncoder.decode(encodedFilePath, decodedFilePath);
-    seqEncoder.clear_sequence();
+    seqEncoder.AddToSequence(EEncoderType::e_HUFFMAN);
+    seqEncoder.AddToSequence(EEncoderType::e_LZ77);
+    seqEncoder.Process(EEncodingDirection::e_BACKWARD, encodedFilePath, decodedFilePath);
+    seqEncoder.ClearSequence();
     std::cout << "Decoding complete." << std::endl;
 
     return 0;

@@ -10,8 +10,8 @@ public:
     BWTransform() = default;
     ~BWTransform() = default;
 
-public:
+private:
 
-    void encode(const std::string& inputFilePath, const std::string& outputFilePath) override;
-    void decode(const std::string& inputFilePath, const std::string& outputFilePath) override;
+    void _Encode(const std::string& inputFilePath, const std::string& outputFilePath) override;
+    void _Decode(const std::string& inputFilePath, const std::string& outputFilePath) override;
 };  // END BWTransform

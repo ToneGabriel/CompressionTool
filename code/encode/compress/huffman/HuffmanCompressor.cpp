@@ -7,7 +7,7 @@
 #include <fstream>
 
 
-void HuffmanCompressor::encode(const std::string& inputFilePath, const std::string& outputFilePath)
+void HuffmanCompressor::_Encode(const std::string& inputFilePath, const std::string& outputFilePath)
 {
     std::ifstream inputFile(inputFilePath, std::ios::binary);
     std::ofstream outputFile(outputFilePath, std::ios::binary);
@@ -89,7 +89,7 @@ void HuffmanCompressor::encode(const std::string& inputFilePath, const std::stri
     }   // END encode and write file
 }
 
-void HuffmanCompressor::decode(const std::string& inputFilePath, const std::string& outputFilePath)
+void HuffmanCompressor::_Decode(const std::string& inputFilePath, const std::string& outputFilePath)
 {
     std::ifstream inputFile(inputFilePath, std::ios::binary);
     std::ofstream outputFile(outputFilePath, std::ios::binary);

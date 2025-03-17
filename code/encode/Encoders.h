@@ -19,38 +19,10 @@ enum class EEncoderType
 };  // END EEncoderType
 
 
-class BasicEncoder  // Facade for using different encoders and controlling their lifecycle
-{
-private:
-    EEncoderType _currentEncoderType;
-
-public:
-
-    BasicEncoder()
-        : _currentEncoderType(EEncoderType::e_DEFAULT) { /*Empty */ }
-
-    ~BasicEncoder() = default;
-
-    BasicEncoder(const BasicEncoder&) = default;
-    BasicEncoder& operator=(const BasicEncoder&) = default;
-
-public:
-
-    void set_type(EEncoderType type);
-    EEncoderType get_type() const;
-
-    void encode(const std::string& inputFilePath, const std::string& outputFilePath);
-    void decode(const std::string& inputFilePath, const std::string& outputFilePath);
-
-private:
-    static std::unique_ptr<IEncoder> _get_encoder(EEncoderType type);   // factory method
-};  // END BasicEncoder
-
-
 class SequentialEncoder
 {
 private:
-    std::vector<EEncoderType> _encodeSequence;
+    std::vector<EEncoderType> _encoderTypeSequence;
 
 public:
 
@@ -60,12 +32,17 @@ public:
     SequentialEncoder(const SequentialEncoder&) = default;
     SequentialEncoder& operator=(const SequentialEncoder&) = default;
 
+private:
+
+    static std::unique_ptr<IEncoder> _GetEncoder(EEncoderType type);   // factory method
+
 public:
 
-    void add_to_sequence(EEncoderType type);
-    void clear_sequence();
-    bool empty_sequence() const;
+    void AddToSequence(EEncoderType type);
+    void ClearSequence();
+    bool EmptySequence() const;
 
-    void encode(const std::string& inputFilePath, const std::string& outputFilePath);
-    void decode(const std::string& inputFilePath, const std::string& outputFilePath);
+    void Process(   EEncodingDirection direction,
+                    const std::string& inputFilePath,
+                    const std::string& outputFilePath);
 };   // END SequentialEncoder

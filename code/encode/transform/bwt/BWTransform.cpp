@@ -1,12 +1,12 @@
 #include "BWTransform.h"
 
 
-void BWTransform::encode(const std::string& inputFilePath, const std::string& outputFilePath)
+void BWTransform::_Encode(const std::string& inputFilePath, const std::string& outputFilePath)
 {
     // TODO
 }
 
-void BWTransform::decode(const std::string& inputFilePath, const std::string& outputFilePath)
+void BWTransform::_Decode(const std::string& inputFilePath, const std::string& outputFilePath)
 {
     // TODO
 }

@@ -5,7 +5,7 @@
 #include <list>
 
 
-void MTFTransform::encode(const std::string& inputFilePath, const std::string& outputFilePath)
+void MTFTransform::_Encode(const std::string& inputFilePath, const std::string& outputFilePath)
 {
     std::ifstream inputFile(inputFilePath, std::ios::binary);
     std::ofstream outputFile(outputFilePath, std::ios::binary);
@@ -37,7 +37,7 @@ void MTFTransform::encode(const std::string& inputFilePath, const std::string& o
     }
 }
 
-void MTFTransform::decode(const std::string& inputFilePath, const std::string& outputFilePath)
+void MTFTransform::_Decode(const std::string& inputFilePath, const std::string& outputFilePath)
 {
     std::ifstream inputFile(inputFilePath, std::ios::binary);
     std::ofstream outputFile(outputFilePath, std::ios::binary);
